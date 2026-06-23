@@ -1,0 +1,91 @@
+// =============================================================
+//  TEMA RENKLERİ — CSS Custom Properties ile (light/dark switch)
+// =============================================================
+//
+//  Component SCSS dosyaları $color-bg gibi SCSS değişkenlerini
+//  kullanmaya devam eder — bu değişkenler altta var(--...) olarak
+//  CSS değişkenlerine bağlanmıştır. HTML kök elementinde
+//  data-theme="dark" veya "light" attribute'u değiştirildiğinde
+//  tüm tema anında değişir.
+
+// Varsayılan: KARANLIK tema
+:root,
+[data-theme='dark'] {
+  --color-bg:         #0f172a;
+  --color-surface:    #1e293b;
+  --color-surface-2:  #334155;
+  --color-text:       #f1f5f9;
+  --color-text-muted: #94a3b8;
+  --color-border:     #334155;
+  --shadow-card:      0 4px 24px rgba(0, 0, 0, 0.3);
+
+  // Marka renkleri (her iki temada aynı)
+  --color-income:  #22c55e;
+  --color-expense: #ef4444;
+  --color-asset:   #3b82f6;
+  --color-warning: #f59e0b;
+  --color-primary: #6366f1;
+
+  // Isı haritası (Treemap) renkleri - Koyu Tema
+  --color-heatmap-profit-high:        #089981;
+  --color-heatmap-profit-high-hover:  #057865;
+  --color-heatmap-profit-low:         #26a69a;
+  --color-heatmap-profit-low-hover:   #1f8c81;
+  --color-heatmap-neutral:            #454f5e;
+  --color-heatmap-neutral-hover:      #353f4d;
+  --color-heatmap-loss-low:           #ef5350;
+  --color-heatmap-loss-low-hover:     #d32f2f;
+  --color-heatmap-loss-high:          #f23645;
+  --color-heatmap-loss-high-hover:    #c81c28;
+}
+
+// AYDINLIK tema — yüksek kontrast, modern
+[data-theme='light'] {
+  --color-bg:         #f8fafc;
+  --color-surface:    #ffffff;
+  --color-surface-2:  #f1f5f9;
+  --color-text:       #0f172a;
+  --color-text-muted: #64748b;
+  --color-border:     #e2e8f0;
+  --shadow-card:      0 4px 24px rgba(15, 23, 42, 0.08);
+
+  // Marka renkleri biraz daha doygun (açık zeminde daha iyi okunur)
+  --color-income:  #16a34a;
+  --color-expense: #dc2626;
+  --color-asset:   #2563eb;
+  --color-warning: #d97706;
+  --color-primary: #4f46e5;
+
+  // Isı haritası (Treemap) renkleri - Açık Tema
+  --color-heatmap-profit-high:        #00695c;
+  --color-heatmap-profit-high-hover:  #004d40;
+  --color-heatmap-profit-low:         #009688;
+  --color-heatmap-profit-low-hover:   #00796b;
+  --color-heatmap-neutral:            #78909c;
+  --color-heatmap-neutral-hover:      #607d8b;
+  --color-heatmap-loss-low:           #e57373;
+  --color-heatmap-loss-low-hover:     #ef5350;
+  --color-heatmap-loss-high:          #c62828;
+  --color-heatmap-loss-high-hover:    #b71c1c;
+}
+
+// =============================================================
+//  SCSS değişkenleri — CSS değişkenlerine bağlanmış proxyler
+// =============================================================
+$color-income:    var(--color-income);
+$color-expense:   var(--color-expense);
+$color-asset:     var(--color-asset);
+$color-warning:   var(--color-warning);
+$color-primary:   var(--color-primary);
+$color-bg:        var(--color-bg);
+$color-surface:   var(--color-surface);
+$color-surface-2: var(--color-surface-2);
+$color-text:      var(--color-text);
+$color-text-muted:var(--color-text-muted);
+$color-border:    var(--color-border);
+$shadow-card:     var(--shadow-card);
+
+// Spacing & radius (tema bağımsız)
+$radius-sm: 6px;
+$radius-md: 12px;
+$radius-lg: 16px;

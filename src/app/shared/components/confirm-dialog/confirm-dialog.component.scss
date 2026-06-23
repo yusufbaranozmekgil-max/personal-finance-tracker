@@ -1,0 +1,89 @@
+@use '../../../../styles/variables' as v;
+@use '../../../../styles/mixins' as m;
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  @include m.flex-center;
+  animation: fadeIn 0.2s ease;
+  padding: 1rem;
+}
+
+.modal {
+  background: v.$color-surface;
+  border-radius: v.$radius-lg;
+  border: 1px solid v.$color-border;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  padding: 2rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  animation: scaleIn 0.25s ease;
+
+  &__icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin: 0 auto 1.2rem;
+    @include m.flex-center;
+    font-size: 1.8rem;
+    font-weight: 700;
+  }
+
+  &__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+  }
+
+  &__message {
+    color: v.$color-text-muted;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 1.8rem;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+
+    .btn { min-width: 110px; }
+  }
+
+  &--danger .modal__icon {
+    background: rgba(239, 68, 68, 0.15);
+    color: v.$color-expense;
+  }
+
+  &--warning .modal__icon {
+    background: rgba(245, 158, 11, 0.15);
+    color: v.$color-warning;
+  }
+
+  &--info .modal__icon {
+    background: rgba(59, 130, 246, 0.15);
+    color: v.$color-asset;
+  }
+}
+
+.btn {
+  @include m.btn(v.$color-primary);
+  padding: 0.7rem 1.5rem;
+
+  &--ghost { @include m.btn(v.$color-surface-2, v.$color-text); padding: 0.7rem 1.5rem; }
+  &--danger { @include m.btn(v.$color-expense); padding: 0.7rem 1.5rem; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}

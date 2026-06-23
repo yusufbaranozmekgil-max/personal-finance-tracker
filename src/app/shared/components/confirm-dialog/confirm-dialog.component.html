@@ -1,0 +1,22 @@
+@if (state.open) {
+  <div class="modal-backdrop" (click)="confirmService.cancel()">
+    <div class="modal" (click)="$event.stopPropagation()" [class]="'modal--' + state.kind">
+      <div class="modal__icon">
+        <span>{{ iconForKind }}</span>
+      </div>
+      <h2 class="modal__title">{{ state.title }}</h2>
+      <p class="modal__message">{{ state.message }}</p>
+      <div class="modal__actions">
+        <button class="btn btn--ghost" (click)="confirmService.cancel()">
+          {{ state.cancelText }}
+        </button>
+        <button class="btn"
+                [class.btn--danger]="state.kind === 'danger'"
+                [class.btn--primary]="state.kind !== 'danger'"
+                (click)="confirmService.confirm()">
+          {{ state.confirmText }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,706 @@
+<div class="settings">
+  <h1 class="page-title">Settings</h1>
+
+  <!-- Tab Selector -->
+  <div class="settings-tabs">
+    <button class="tab-btn" [class.tab-btn--active]="activeTab === 'general'" (click)="setActiveTab('general')">
+      ⚙️ General
+    </button>
+    <button class="tab-btn" [class.tab-btn--active]="activeTab === 'integrations'" (click)="setActiveTab('integrations')">
+      🔗 Integrations
+    </button>
+    <button class="tab-btn" [class.tab-btn--active]="activeTab === 'security'" (click)="setActiveTab('security')">
+      🔒 Security
+    </button>
+    <button class="tab-btn" [class.tab-btn--active]="activeTab === 'data_reports'" (click)="setActiveTab('data_reports')">
+      📊 Reports & Data
+    </button>
+  </div>
+
+  <!-- GENERAL TAB -->
+  @if (activeTab === 'general') {
+    <!-- Theme -->
+    <div class="settings-card" [class.settings-card--collapsed]="!isCardExpanded('theme')">
+      <div class="settings-card__header" (click)="toggleCard('theme')">
+        <h3>🌓 Appearance Theme</h3>
+        <span class="expand-icon">{{ isCardExpanded('theme') ? '▲' : '▼' }}</span>
+      </div>
+      @if (isCardExpanded('theme')) {
+        <div class="settings-card__content animate-fade-in">
+          <p class="section-desc">Switch between dark and light themes. Your selection is stored in the browser.</p>
+          <div class="theme-switcher">
+            <button class="theme-option"
+                    [class.theme-option--active]="themeService.theme() === 'dark'"
+                    (click)="themeService.set('dark')">
+              <span class="theme-option__icon">🌙</span>
+              <span class="theme-option__label">
+                <strong>Dark</strong>
+                <span>Easy on the eyes in low light</span>
+              </span>
+            </button>
+            <button class="theme-option"
+                    [class.theme-option--active]="themeService.theme() === 'light'"
+                    (click)="themeService.set('light')">
+              <span class="theme-option__icon">☀️</span>
+              <span class="theme-option__label">
+                <strong>Light</strong>
+                <span>High contrast, professional</span>
+              </span>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Currency -->
+    <div class="settings-card" [class.settings-card--collapsed]="!isCardExpanded('currency')">
+      <div class="settings-card__header" (click)="toggleCard('currency')">
+        <h3>💱 Currency</h3>
+        <span class="expand-icon">{{ isCardExpanded('currency') ? '▲' : '▼' }}</span>
+      </div>
+      @if (isCardExpanded('currency')) {
+        <div class="settings-card__content animate-fade-in">
+          <p class="section-desc">All amounts are displayed in the currency you select here.</p>
+          <div class="field">
+            <label>Default Currency</label>
+            <select [(ngModel)]="form.currency">
+              <option value="TRY">₺ TRY — Turkish Lira</option>
+              <option value="USD">$ USD — US Dollar</option>
+              <option value="EUR">€ EUR — Euro</option>
+            </select>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Budget Limit -->
+    <div class="settings-card" [class.settings-card--collapsed]="!isCardExpanded('budgetLimit')">
+      <div class="settings-card__header" (click)="toggleCard('budgetLimit')">
+        <h3>🎯 Monthly Budget Limit</h3>
+        <span class="expand-icon">{{ isCardExpanded('budgetLimit') ? '▲' : '▼' }}</span>
+      </div>
+      @if (isCardExpanded('budgetLimit')) {
+        <div class="settings-card__content animate-fade-in">
+          <p class="section-desc">A warning will be shown on the dashboard and banner when the monthly spending limit is exceeded.</p>
+          <div class="field">
+            <label>Monthly Spending Limit (₺)</label>
+            <input type="number" [(ngModel)]="form.monthlyLimit" min="0" [max]="maxMoneyAmount" placeholder="0 = disabled">
+            <p class="field-hint">Always enter the amount in Turkish Lira (₺). The display currency automatically converts based on the selected currency.</p>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Monthly Period Transition -->
+    <div class="settings-card" [class.settings-card--collapsed]="!isCardExpanded('periodTransition')">
+      <div class="settings-card__header" (click)="toggleCard('periodTransition')">
+        <h3>🔄 Monthly Period Transition & Recurring Transactions</h3>
+        <span class="expand-icon">{{ isCardExpanded('periodTransition') ? '▲' : '▼' }}</span>
+      </div>
+      @if (isCardExpanded('periodTransition')) {
+        <div class="settings-card__content animate-fade-in">
+          <p class="section-desc">
+            A new budget period begins on the day you specify. This action <strong>does NOT DELETE any of your data or past transactions</strong>; your historical records are safely preserved. Only a new budget period starts, and transactions you marked as "Recurring" (such as salary, rent, bills) are automatically copied for the new period.
+          </p>
+          <div class="field">
+            <label>Period Start Day (1-28)</label>
+            <input type="number"
+                   [(ngModel)]="form.resetDay"
+                   (input)="validateResetDay($event)"
+                   (blur)="onResetDayBlur($event)"
+                   min="1"
+                   max="28"
+                   placeholder="1">
+            <p class="field-hint">
+              For example, by selecting your payday (e.g., the 15th of the month) you can track your budget according to your pay periods. When a new period starts, your budget spending progress resets to show only the current month's expenses.
+            </p>
+          </div>
+          <button class="btn btn--secondary" (click)="runManualReset()">
+            ⚡ Refresh Recurring Transactions & Period
+            <span class="btn__sub">Manually trigger the new budget period transition and copy this month's recurring transactions (no data is deleted)</span>
+          </button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- INTEGRATIONS TAB -->
+  @if (activeTab === 'integrations') {
+    <!-- Exchange Rates -->
+    <div class="settings-card" [class.settings-card--collapsed]="!isCardExpanded('exchangeRates')">
+      <div class="settings-card__header" (click)="toggleCard('exchangeRates')">
+        <h3>📈 Exchange Rates</h3>
+        <span class="expand-icon">{{ isCardExpanded('exchangeRates') ? '▲' : '▼' }}</span>
+      </div>
+      @if (isCardExpanded('exchangeRates')) {
+        <div class="settings-card__content animate-fade-in">
+          <div class="card-header-row">
+            <div>
+              <p class="section-desc" style="margin: 0;">Used to convert foreign currency/crypto assets in the portfolio to TRY.</p>
+            </div>
+            <button class="btn btn--secondary"
+                    (click)="fetchLiveRates()"
+                    [disabled]="rateService.loading()">
+              @if (rateService.loading()) {
+                ⏳ Fetching...
+              } @else {
+                🔄 Fetch Live Rates
+              }
+            </button>
+          </div>
+
+          <div class="form-grid" style="margin-top: 1rem;">
+            <div class="field">
+              <label>1 USD = ? ₺</label>
+              <input type="number" [(ngModel)]="form.usdRate" min="0" [max]="maxMoneyAmount" step="0.01" placeholder="32.00">
+            </div>
+            <div class="field">
+              <label>1 EUR = ? ₺</label>
+              <input type="number" [(ngModel)]="form.eurRate" min="0" [max]="maxMoneyAmount" step="0.01" placeholder="35.00">
+            </div>
+          </div>
+
+          @if (rateService.getCached(); as cached) {
+            <p class="rate-cache-info">
+              ✓ Last successful update:
+              <strong>{{ rateService.formatRelativeTime(cached.fetchedAt) }}</strong>
+              ({{ cached.source }})
+              — 1 USD = {{ cached.usd }} ₺, 1 EUR = {{ cached.eur }} ₺
+            </p>
+          }
+
+          <p class="api-info">
+            💡 Live rates are fetched from 3 fallback APIs (Frankfurter, open.er-api, exchangerate.host). When offline, the last saved rate is used.
+          </p>
+        </div>
+      }
+    </div>
+
+    <!-- BIST API -->
+    <div class="settings-card" [class.settings-card--collapsed]="!isCardExpanded('stockApi')">
+      <div class="settings-card__header" (click)="toggleCard('stockApi')">
+        <h3>🔑 BIST Stock API</h3>
+        <span class="expand-icon">{{ isCardExpanded('stockApi') ? '▲' : '▼' }}</span>
+      </div>
+      @if (isCardExpanded('stockApi')) {
+        <div class="settings-card__content animate-fade-in">
+          <p class="section-desc">
+            Enter a free API key to fetch live prices for BIST stocks (ASELS, THYAO, etc.).
+            If you don't enter a key, you'll update stock prices manually — the app won't throw any errors.
+          </p>
+
+          <div class="form-grid">
+            <div class="field">
+              <label>Provider</label>
+              <select [(ngModel)]="form.stockApiProvider">
+                <option value="twelvedata">Twelve Data — 800 requests/day</option>
+                <option value="alphavantage">Alpha Vantage — 25 requests/day</option>
+                <option value="finnhub">Finnhub — 60 requests/min</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>API Key</label>
+              <input type="password"
+                     [(ngModel)]="form.stockApiKey"
+                     placeholder="Paste your API key...">
+            </div>
+          </div>
+
+          <div class="api-actions">
+            <button class="btn btn--secondary"
+                    (click)="testApiKey()"
+                    [disabled]="testingApi || !form.stockApiKey.trim()">
+              @if (testingApi) { ⏳ Testing... } @else { ✓ Test API Key }
+            </button>
+            <a [href]="providerInfo[form.stockApiProvider].url"
+               target="_blank"
+               rel="noopener"
+               class="api-link">
+              🌐 Get a Free Key from {{ providerInfo[form.stockApiProvider].name }} →
+            </a>
+          </div>
+
+          @if (form.stockApiKey.trim()) {
+            <p class="rate-cache-info">
+              ✓ Active provider: <strong>{{ providerInfo[form.stockApiProvider].name }}</strong>
+              ({{ providerInfo[form.stockApiProvider].quota }})
+            </p>
+          } @else {
+            <p class="api-info">
+              💡 Without a key: BIST stocks will show a "ⓘ Manual" badge in the portfolio.
+              Twelve Data is recommended — free, registration takes 30 seconds, BIST symbols (.IST suffix) are supported.
+            </p>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Cloud Sync -->
+    <div class="settings-card" [class.settings-card--collapsed]="!isCardExpanded('cloudSync')">
+      <div class="settings-card__header" (click)="toggleCard('cloudSync')">
+        <h3>☁️ Cloud Sync (Zero-Knowledge)</h3>
+        <span class="expand-icon">{{ isCardExpanded('cloudSync') ? '▲' : '▼' }}</span>
+      </div>
+      @if (isCardExpanded('cloudSync')) {
+        <div class="settings-card__content animate-fade-in">
+          <div class="card-header-row">
+            <div>
+              <p class="section-desc" style="margin: 0;">
+                Encrypt and back up your data to your own Google Drive account. Securely sync across your devices.
+              </p>
+            </div>
+            <div class="sync-badge-container">
+              @if (gdriveSync.isConnected()) {
+                <span class="sync-badge sync-badge--connected">🟢 Connected</span>
+              } @else {
+                <span class="sync-badge sync-badge--disconnected">🔴 Not Connected</span>
+              }
+            </div>
+          </div>
+
+          <div class="form-grid" style="margin-top: 1rem;">
+            <div class="field">
+              <label>Google OAuth Client ID</label>
+              <input type="text" [(ngModel)]="form.gdriveClientId" placeholder="Enter Google OAuth Client ID...">
+              <p class="field-hint">
+                You must use your own Google Client ID for cloud sync. 
+                You can create one for free from <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a>.
+              </p>
+            </div>
+          </div>
+
+          <div class="gdrive-actions">
+            @if (!gdriveSync.isConnected()) {
+              <button class="btn btn--primary" (click)="connectGDrive()" [disabled]="!form.gdriveClientId?.trim()">
+                🔑 Connect to Google Drive
+              </button>
+            } @else {
+              <button class="btn btn--danger" (click)="disconnectGDrive()">
+                ❌ Disconnect
+              </button>
+            }
+          </div>
+
+          @if (gdriveSync.isConnected()) {
+            <div class="sync-ops">
+              <h4>🔒 Zero-Knowledge Encryption Key</h4>
+              <p class="section-desc">
+                Your data is encrypted in your browser before being uploaded to Google Drive. No one, including Google, can see the contents.
+              </p>
+
+              @if (canUseVaultPassword) {
+                <label class="vault-password-checkbox">
+                  <input type="checkbox" [(ngModel)]="useVaultPassword">
+                  <span>Use My Local Vault Password (🔒 Automatic & Secure)</span>
+                </label>
+              }
+
+              @if (!useVaultPassword || !canUseVaultPassword) {
+                <div class="field" style="margin-top: 1rem;">
+                  <label>Sync Password (at least 4 characters)</label>
+                  <input type="password" [(ngModel)]="syncPassword" placeholder="Enter cloud password...">
+                </div>
+              }
+
+              <div class="report-actions" style="margin-top: 1.5rem;">
+                <button class="btn btn--success" (click)="backupToGDrive()" [disabled]="gdriveSync.isSyncing()">
+                  @if (gdriveSync.isSyncing()) { ⏳ Backing up... } @else { 📤 Backup to Cloud }
+                  <span class="btn__sub">Encrypts data and uploads to cloud</span>
+                </button>
+                
+                <button class="btn btn--secondary" (click)="restoreFromGDrive()" [disabled]="gdriveSync.isSyncing()">
+                  @if (gdriveSync.isSyncing()) { ⏳ Downloading... } @else { 📥 Restore from Cloud }
+                  <span class="btn__sub">Updates local data with the cloud backup</span>
+                </button>
+              </div>
+
+              @if (form.gdriveLastSync) {
+                <p class="rate-cache-info" style="margin-top: 1rem;">
+                  ✓ Last Sync: <strong>{{ form.gdriveLastSync | date:'MM/dd/yyyy hh:mm:ss a' }}</strong>
+                </p>
+              }
+            </div>
+          }
+
+          <div class="setup-guide">
+            <h5>💡 How to Get a Google Cloud OAuth Client ID (Free, 2 Minutes)</h5>
+            <ol>
+              <li>Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a> and create a new project.</li>
+              <li>Navigate to <strong>APIs & Services &gt; OAuth Consent Screen</strong>, select <strong>External</strong> and save the consent screen.</li>
+              <li>Click the <strong>Credentials</strong> tab, then select <strong>Create Credentials &gt; OAuth Client ID</strong>.</li>
+              <li>Choose <strong>Web Application</strong> as the application type.</li>
+              <li>In the <strong>Authorized Redirect URIs</strong> field, add this application's address: <br>
+                <code>{{ windowOrigin }}/settings</code>
+              </li>
+              <li>Paste the generated <strong>Client ID</strong> into the field above and save the settings at the bottom of the page.</li>
+            </ol>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- SAVE/CANCEL BUTTONS FOR GENERAL AND INTEGRATIONS -->
+  @if (activeTab === 'general' || activeTab === 'integrations') {
+    <div class="actions">
+      <button class="btn btn--primary" (click)="submit()">Save Settings</button>
+      <button class="btn btn--ghost" (click)="reset()">Cancel</button>
+    </div>
+  }
+
+  <!-- SECURITY TAB -->
+  @if (activeTab === 'security') {
+    <!-- Vault -->
+    <div class="settings-card" [class.settings-card--collapsed]="!isCardExpanded('vault')">
+      <div class="settings-card__header" (click)="toggleCard('vault')">
+        <h3>🔒 Vault — Local Security Password</h3>
+        <span class="expand-icon">{{ isCardExpanded('vault') ? '▲' : '▼' }}</span>
+      </div>
+      @if (isCardExpanded('vault')) {
+        <div class="settings-card__content animate-fade-in">
+          <p class="section-desc">
+            If you share your computer, all your financial data is encrypted with AES.
+            When Vault is active, a password is required at app startup.
+          </p>
+
+          @if (encryption.hasVault()) {
+            <div class="vault-status vault-status--active" style="margin-bottom: 1rem;">
+              🔒 Vault is active — Your data is stored encrypted with strong AES-256 in the browser.
+            </div>
+            
+            <div class="vault-actions-row" style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+              <button class="btn btn--secondary" (click)="lockNow()">
+                🔒 Lock Now
+                <span class="btn__sub">Log out and show the lock screen</span>
+              </button>
+              <button class="btn btn--info" (click)="toggleChangePasswordForm()">
+                🔑 Change Password
+                <span class="btn__sub">Set a new password using your current one</span>
+              </button>
+              <button class="btn btn--danger" (click)="toggleDisableVaultForm()">
+                🔓 Disable Security
+                <span class="btn__sub">Remove encryption and revert to plain text</span>
+              </button>
+            </div>
+
+            <!-- Change Password Form -->
+            @if (showChangePasswordForm) {
+              <div class="sub-form-card" style="margin-bottom: 1.5rem; padding: 1.25rem; border-radius: 8px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);">
+                <h4 style="margin-top: 0; margin-bottom: 0.75rem; font-size: 1rem; color: var(--text-color);">🔑 Change Vault Password</h4>
+                <div class="form-grid">
+                  <div class="field">
+                    <label>Current Password</label>
+                    <input type="password" [(ngModel)]="changePwdForm.oldPassword" placeholder="••••••" maxlength="20">
+                  </div>
+                  <div class="field">
+                    <label>New Password (4-20 characters, must include upper/lowercase and symbols)</label>
+                    <input type="password" [(ngModel)]="changePwdForm.newPassword" placeholder="••••••" maxlength="20">
+                  </div>
+                  <div class="field">
+                    <label>New Password (confirm)</label>
+                    <input type="password" [(ngModel)]="changePwdForm.newPasswordConfirm" placeholder="••••••" maxlength="20">
+                  </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1.25rem;">
+                  <button class="btn btn--primary" (click)="submitChangePassword()">✓ Update Password</button>
+                  <button class="btn btn--ghost" (click)="toggleChangePasswordForm()">Cancel</button>
+                </div>
+              </div>
+            }
+
+            <!-- Disable Vault Form -->
+            @if (showDisableVaultForm) {
+              <div class="sub-form-card" style="margin-bottom: 1.5rem; padding: 1.25rem; border-radius: 8px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.15);">
+                <h4 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1rem; color: #f87171;">🔓 Disable Vault Protection</h4>
+                <p class="field-hint" style="margin-top: 0; margin-bottom: 1rem; color: var(--text-muted);">
+                  When you remove encryption, your data will be stored unencrypted in the browser. Enter your current password to continue.
+                </p>
+                <div class="field" style="max-width: 320px;">
+                  <label>Current Password</label>
+                  <input type="password" [(ngModel)]="disableVaultPassword" placeholder="••••••">
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1.25rem;">
+                  <button class="btn btn--danger" (click)="submitDisableVault()">⚠️ Switch to Unencrypted Storage</button>
+                  <button class="btn btn--ghost" (click)="toggleDisableVaultForm()">Cancel</button>
+                </div>
+              </div>
+            }
+          } @else {
+            <div class="form-grid">
+              <div class="field">
+                <label>Password (4-20 characters, must include upper/lowercase and symbols)</label>
+                <input type="password" [(ngModel)]="vaultPassword" placeholder="••••••" maxlength="20">
+              </div>
+              <div class="field">
+                <label>Password (confirm)</label>
+                <input type="password" [(ngModel)]="vaultPasswordConfirm" placeholder="••••••" maxlength="20">
+              </div>
+            </div>
+            <button class="btn btn--secondary" (click)="enableVault()">
+              🔒 Activate Vault
+              <span class="btn__sub">Data will be encrypted, page will reload</span>
+            </button>
+            <p class="api-info">
+              ⚠ <strong>Important:</strong> If you forget your password, your data will be PERMANENTLY lost.
+              It is recommended to create a backup first.
+            </p>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Storage Status -->
+    <div class="settings-card" [class.settings-card--collapsed]="!isCardExpanded('storage')">
+      <div class="settings-card__header" (click)="toggleCard('storage')">
+        <h3>💾 Storage Status (IndexedDB)</h3>
+        <span class="expand-icon">{{ isCardExpanded('storage') ? '▲' : '▼' }}</span>
+      </div>
+      @if (isCardExpanded('storage') && storageUsage) {
+        <div class="settings-card__content animate-fade-in">
+          <p class="section-desc">
+            Data is stored in the browser's IndexedDB database — providing much larger capacity and speed compared to localStorage, which was previously limited to ~5MB.
+          </p>
+          <div class="storage-info">
+            <div class="storage-info__bar">
+              <div class="storage-info__fill" [style.width.%]="storageUsage.usagePercent"></div>
+            </div>
+            <p class="storage-info__text">
+              <strong>{{ formatBytes(storageUsage.usage) }}</strong> /
+              {{ formatBytes(storageUsage.quota) }} used
+              ({{ storageUsage.usagePercent | number:'1.2-2' }}%)
+            </p>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- REPORTS & DATA TAB -->
+  @if (activeTab === 'data_reports') {
+    <!-- Reporting & Export -->
+    <div class="settings-card" [class.settings-card--collapsed]="!isCardExpanded('reporting')">
+      <div class="settings-card__header" (click)="toggleCard('reporting')">
+        <h3>📤 Reporting & Export</h3>
+        <span class="expand-icon">{{ isCardExpanded('reporting') ? '▲' : '▼' }}</span>
+      </div>
+      @if (isCardExpanded('reporting')) {
+        <div class="settings-card__content animate-fade-in">
+          <p class="section-desc">
+            Download your data locally. No information is sent to the internet — all files are generated in the browser.
+          </p>
+          <div class="report-actions">
+            <button class="btn btn--info" (click)="exportCSV()">
+              📄 Download CSV
+              <span class="btn__sub">Transactions only (opens in Excel)</span>
+            </button>
+
+            <button class="btn btn--info" (click)="exportExcel()">
+              📊 Download Excel
+              <span class="btn__sub">4 sheets: Transactions, Portfolio, Goals, Summary</span>
+            </button>
+
+            <button class="btn btn--secondary"
+                    (click)="exportPDF()"
+                    [disabled]="exportingPdf">
+              @if (exportingPdf) {
+                ⏳ Preparing...
+              } @else {
+                📑 Dashboard PDF
+              }
+              <span class="btn__sub">Visual report of the entire dashboard</span>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Statement / Excel Upload -->
+    <div class="settings-card" [class.settings-card--collapsed]="!isCardExpanded('import')">
+      <div class="settings-card__header" (click)="toggleCard('import')">
+        <h3>📥 Statement / Excel Upload</h3>
+        <span class="expand-icon">{{ isCardExpanded('import') ? '▲' : '▼' }}</span>
+      </div>
+      @if (isCardExpanded('import')) {
+        <div class="settings-card__content animate-fade-in">
+          <p class="section-desc">
+            Bulk upload an Excel file downloaded from your bank or a filled-in template.
+            Column headers are automatically recognized (Date, Amount/Debit/Credit, Category, Description, etc.).
+            New categories and accounts are created automatically.
+          </p>
+
+          <div class="report-actions">
+            <button class="btn btn--info" (click)="downloadTemplate()">
+              📄 Download Template Excel
+              <span class="btn__sub">Contains all columns and examples</span>
+            </button>
+            <button class="btn btn--secondary" (click)="triggerTxImport()">
+              📥 Upload Excel / CSV
+              <span class="btn__sub">You'll confirm after preview</span>
+            </button>
+          </div>
+
+          <input #txImportInput
+                 type="file"
+                 accept=".xlsx,.xls,.csv"
+                 (change)="onTxImportFile($event)"
+                 style="display: none;">
+        </div>
+      }
+    </div>
+
+    <!-- Backup (JSON) -->
+    <div class="settings-card" [class.settings-card--collapsed]="!isCardExpanded('backup')">
+      <div class="settings-card__header" (click)="toggleCard('backup')">
+        <h3>💾 Backup (Import / Export)</h3>
+        <span class="expand-icon">{{ isCardExpanded('backup') ? '▲' : '▼' }}</span>
+      </div>
+      @if (isCardExpanded('backup')) {
+        <div class="settings-card__content animate-fade-in">
+          <p class="section-desc">
+            Download all your data as a JSON file to disk, or restore from a backup file.
+            Your data is preserved even if your browser history is cleared or your computer changes.
+          </p>
+
+          <div class="report-actions">
+            <button class="btn btn--info" (click)="exportBackup()">
+              📥 Download Backup (JSON)
+              <span class="btn__sub">All data + settings in one file</span>
+            </button>
+            <button class="btn btn--secondary" (click)="triggerImport()">
+              📤 Restore from Backup
+              <span class="btn__sub">Existing data will be overwritten</span>
+            </button>
+          </div>
+
+          <input #importInput
+                 type="file"
+                 accept="application/json,.json"
+                 (change)="onImportFile($event)"
+                 style="display: none;">
+        </div>
+      }
+    </div>
+
+    <!-- Data Management -->
+    <div class="settings-card settings-card--danger" [class.settings-card--collapsed]="!isCardExpanded('dataManagement')">
+      <div class="settings-card__header" (click)="toggleCard('dataManagement')">
+        <h3>⚙️ Data Management</h3>
+        <span class="expand-icon">{{ isCardExpanded('dataManagement') ? '▲' : '▼' }}</span>
+      </div>
+      @if (isCardExpanded('dataManagement')) {
+        <div class="settings-card__content animate-fade-in">
+          <p class="section-desc">You can reset all your data in the application or test with sample data.</p>
+          <div class="data-actions">
+            <button class="btn btn--info" (click)="loadDemoData()">
+              🧪 Load Demo Data
+              <span class="btn__sub">Loads sample transactions, assets, and goals</span>
+            </button>
+            <button class="btn btn--danger" (click)="resetAllData()">
+              🗑 Reset All Data
+              <span class="btn__sub">Transactions, assets, and goals will be deleted</span>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Import Preview Modal -->
+@if (showImportPreview && importPreview) {
+  <div class="import-overlay" (click)="closeImportPreview()">
+    <div class="import-modal" (click)="$event.stopPropagation()">
+      <div class="import-modal__header">
+        <h2>📥 Import Preview</h2>
+        <button class="import-modal__close" (click)="closeImportPreview()">✕</button>
+      </div>
+
+      <!-- Summary -->
+      <div class="import-summary">
+        <div class="import-stat import-stat--total">
+          <span class="import-stat__label">Total</span>
+          <span class="import-stat__value">{{ importPreview.total }}</span>
+        </div>
+        <div class="import-stat import-stat--valid">
+          <span class="import-stat__label">✓ Valid</span>
+          <span class="import-stat__value">{{ importPreview.valid }}</span>
+        </div>
+        <div class="import-stat import-stat--invalid">
+          <span class="import-stat__label">✕ Invalid</span>
+          <span class="import-stat__value">{{ importPreview.invalid }}</span>
+        </div>
+        <div class="import-stat import-stat--duplicate">
+          <span class="import-stat__label">⚠ Duplicate</span>
+          <span class="import-stat__value">{{ importPreview.duplicates }}</span>
+        </div>
+      </div>
+
+      <!-- New Category/Account Warning -->
+      @if (importPreview.newCategories.income.length || importPreview.newCategories.expense.length || importPreview.newAccounts.length) {
+        <div class="import-info">
+          🆕 Will be automatically created on upload:
+          @if (importPreview.newCategories.expense.length) {
+            <div><strong>New expense categories:</strong> {{ importPreview.newCategories.expense.join(', ') }}</div>
+          }
+          @if (importPreview.newCategories.income.length) {
+            <div><strong>New income categories:</strong> {{ importPreview.newCategories.income.join(', ') }}</div>
+          }
+          @if (importPreview.newAccounts.length) {
+            <div><strong>New accounts:</strong> {{ importPreview.newAccounts.join(', ') }}</div>
+          }
+        </div>
+      }
+
+      <!-- Duplicate Toggle -->
+      <label class="import-duplicate-toggle">
+        <input type="checkbox" [(ngModel)]="skipDuplicates">
+        <span>Skip <strong>{{ importPreview.duplicates }} duplicate records</strong> with same date/amount/description</span>
+      </label>
+
+      <!-- Row Table -->
+      <div class="import-table-wrapper">
+        <table class="import-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Category</th>
+              <th>Amount</th>
+              <th>Description</th>
+              <th>Account</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of importPreview.rows; track r.row) {
+              <tr [class.row-invalid]="!r.ok" [class.row-duplicate]="r.duplicate">
+                <td>{{ r.row }}</td>
+                <td>
+                  @if (!r.ok) { <span class="badge badge--err">✕ {{ r.error }}</span> }
+                  @else if (r.duplicate) { <span class="badge badge--warn">⚠ Duplicate</span> }
+                  @else { <span class="badge badge--ok">✓ OK</span> }
+                </td>
+                <td>{{ r.date || '—' }}</td>
+                <td>{{ r.type === 'income' ? 'Income' : (r.type === 'expense' ? 'Expense' : '—') }}</td>
+                <td>{{ r.category || '—' }}</td>
+                <td>{{ r.amount || '—' }}</td>
+                <td class="row-desc">{{ r.description || '—' }}</td>
+                <td>{{ r.account || '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="import-modal__actions">
+        <button class="btn btn--ghost" (click)="closeImportPreview()">Cancel</button>
+        <button class="btn btn--primary"
+                (click)="confirmImport()"
+                [disabled]="importPreview.valid === 0">
+          ✓ Upload {{ importPreview.valid }} Transactions
+        </button>
+      </div>
+    </div>
+  </div>
+}

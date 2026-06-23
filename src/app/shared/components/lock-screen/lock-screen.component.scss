@@ -1,0 +1,106 @@
+@use '../../../../styles/variables' as v;
+@use '../../../../styles/mixins' as m;
+
+.lock-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  z-index: 9999;
+  @include m.flex-center;
+  padding: 1rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.lock-card {
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-lg;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  animation: scaleIn 0.3s ease;
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: v.$color-text;
+  }
+}
+
+.lock-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.lock-desc {
+  color: v.$color-text-muted;
+  font-size: 0.92rem;
+  margin-bottom: 1.5rem;
+}
+
+.lock-input {
+  width: 100%;
+  background: v.$color-surface-2;
+  border: 2px solid v.$color-border;
+  border-radius: v.$radius-sm;
+  color: v.$color-text;
+  padding: 0.9rem 1.1rem;
+  font-size: 1.05rem;
+  outline: none;
+  transition: border-color 0.2s;
+  text-align: center;
+  letter-spacing: 0.15em;
+
+  &:focus { border-color: v.$color-primary; }
+  &--error {
+    border-color: v.$color-expense;
+    animation: shake 0.4s;
+  }
+}
+
+.lock-error {
+  color: v.$color-expense;
+  font-size: 0.85rem;
+  margin-top: 0.6rem;
+  font-weight: 600;
+}
+
+.lock-btn {
+  @include m.btn(v.$color-primary);
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.9rem;
+  font-size: 1rem;
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.lock-hint {
+  margin-top: 1.5rem;
+  font-size: 0.82rem;
+  color: v.$color-text-muted;
+}
+
+.lock-link {
+  background: none;
+  border: none;
+  color: v.$color-expense;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+
+  &:hover { opacity: 0.8; }
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}

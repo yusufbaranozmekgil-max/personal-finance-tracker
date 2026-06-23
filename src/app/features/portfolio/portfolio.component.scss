@@ -1,0 +1,1119 @@
+@use '../../../styles/variables' as v;
+@use '../../../styles/mixins' as m;
+
+.page-header {
+  @include m.flex-between;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 600px) {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+.page-title { font-size: 1.6rem; font-weight: 700; }
+
+.page-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.btn {
+  @include m.btn(v.$color-primary);
+  &--ghost { @include m.btn(v.$color-surface-2, v.$color-text); }
+  &--sm { padding: 0.35rem 0.8rem; font-size: 0.82rem; }
+  &--danger { @include m.btn(rgba(239,68,68,0.15), v.$color-expense); }
+  &--secondary { @include m.btn(rgba(245, 158, 11, 0.15), v.$color-warning); }
+  &--live { @include m.btn(rgba(34, 197, 94, 0.15), v.$color-income); }
+  &--manual {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(148, 163, 184, 0.15);
+    color: v.$color-text-muted;
+    padding: 0.35rem 0.8rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: help;
+    user-select: none;
+  }
+  &--primary { @include m.btn(v.$color-primary); }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+}
+
+.quick-price {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: v.$radius-sm;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  animation: slideDown 0.2s ease;
+
+  label {
+    display: block;
+    font-size: 0.78rem;
+    color: v.$color-warning;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__input-row {
+    display: flex;
+    gap: 0.5rem;
+
+    input {
+      flex: 1;
+      @include m.input-base;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+  }
+
+  &__hint {
+    font-size: 0.72rem;
+    color: v.$color-text-muted;
+    margin-top: 0.5rem;
+    font-style: italic;
+  }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// Toplam Kartlar
+.total-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 1100px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 800px) { grid-template-columns: 1fr; }
+}
+
+.total-card {
+  @include m.card;
+  border-left: 4px solid v.$color-border;
+
+  &__label {
+    font-size: 0.75rem;
+    color: v.$color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.4rem;
+    font-weight: 700;
+  }
+
+  &__value { font-size: 1.6rem; font-weight: 800; color: v.$color-text; }
+
+  &--asset {
+    border-left-color: v.$color-asset;
+    .total-card__value { color: v.$color-asset; }
+  }
+  &--income {
+    border-left-color: v.$color-income;
+    .total-card__value { color: v.$color-income; }
+  }
+  &--expense {
+    border-left-color: v.$color-expense;
+    .total-card__value { color: v.$color-expense; }
+  }
+}
+
+// Form
+.form-card {
+  @include m.card;
+  margin-bottom: 1.5rem;
+
+  h3 { font-size: 1rem; font-weight: 600; margin-bottom: 1.2rem; }
+}
+
+.presets-section {
+  margin-bottom: 1.2rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px dashed v.$color-border;
+}
+
+.presets-label {
+  display: block;
+  font-size: 0.78rem;
+  color: v.$color-text-muted;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.6rem;
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.preset-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: v.$color-surface-2;
+  border: 1px solid transparent;
+  color: v.$color-text;
+  padding: 0.5rem 0.85rem;
+  border-radius: v.$radius-sm;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+
+  &:hover { border-color: v.$color-primary; background: rgba(99,102,241,0.1); }
+
+  strong { font-size: 0.88rem; font-weight: 700; color: v.$color-primary; }
+  span { font-size: 0.7rem; color: v.$color-text-muted; margin-top: 1px; }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  &--full { grid-column: 1 / -1; }
+
+  label { font-size: 0.82rem; color: v.$color-text-muted; font-weight: 500; }
+  input, select { @include m.input-base; }
+}
+
+.link-expense-field { margin-top: 0.4rem; }
+
+.link-expense-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.85rem 1rem;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: v.$radius-sm;
+  transition: border-color 0.2s, background 0.2s;
+  user-select: none;
+
+  &:hover {
+    border-color: v.$color-warning;
+    background: rgba(245, 158, 11, 0.12);
+  }
+
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid v.$color-warning;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    margin-top: 2px;
+    transition: all 0.2s;
+
+    &:checked {
+      background: v.$color-warning;
+
+      &::after {
+        content: '✓';
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff;
+        font-size: 0.85rem;
+        font-weight: 800;
+      }
+    }
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: v.$color-text;
+  }
+
+  &__hint {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: v.$color-text-muted;
+    font-style: italic;
+    line-height: 1.45;
+
+    strong { color: v.$color-warning; font-weight: 700; }
+  }
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+
+  @media (max-width: 500px) {
+    flex-direction: column;
+
+    .btn { width: 100%; }
+  }
+}
+
+// Tür Filtreleri
+// Kategori Yönetim Çubuğu
+.category-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+
+  &__left { display: flex; gap: 0.4rem; }
+}
+
+.category-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem;
+  background: v.$color-surface;
+  border-radius: v.$radius-md;
+  border: 1px solid v.$color-border;
+
+  input {
+    flex: 1;
+    @include m.input-base;
+  }
+}
+
+// Akordeon Kategoriler
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.category {
+  background: v.$color-surface;
+  border-radius: v.$radius-md;
+  border: 1px solid v.$color-border;
+  overflow: hidden;
+  transition: border-color 0.2s;
+
+  &:hover { border-color: rgba(99, 102, 241, 0.3); }
+
+  &--empty {
+    opacity: 0.7;
+    .category__header { cursor: default; }
+  }
+
+  &__header {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1rem 1.2rem;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition: background 0.15s;
+
+    &:not(:disabled):hover { background: v.$color-surface-2; }
+
+    @media (max-width: 600px) {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+  }
+
+  &__chevron {
+    color: v.$color-text-muted;
+    font-size: 0.7rem;
+    transition: transform 0.2s;
+    width: 12px;
+    flex-shrink: 0;
+
+    &.expanded { transform: rotate(90deg); color: v.$color-primary; }
+  }
+
+  &__icon { font-size: 1.4rem; flex-shrink: 0; }
+
+  &__name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: v.$color-text;
+    flex: 1;
+  }
+
+  &__count {
+    font-size: 0.78rem;
+    color: v.$color-text-muted;
+    font-weight: 600;
+    background: v.$color-surface-2;
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+  }
+
+  &__value {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: v.$color-text;
+    margin-left: 0.4rem;
+  }
+
+  &__profit {
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+
+    &.profit-positive { color: v.$color-income; background: rgba(34, 197, 94, 0.12); }
+    &.profit-negative { color: v.$color-expense; background: rgba(239, 68, 68, 0.12); }
+  }
+
+  &__empty-hint {
+    font-size: 0.78rem;
+    color: v.$color-text-muted;
+    font-style: italic;
+  }
+
+  &__delete {
+    background: none;
+    border: none;
+    color: v.$color-text-muted;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+    transition: color 0.2s, background 0.2s;
+
+    &:hover { color: v.$color-expense; background: rgba(239, 68, 68, 0.1); }
+  }
+
+  &__body {
+    padding: 0.5rem 1rem 1.2rem;
+    border-top: 1px solid v.$color-border;
+    animation: slideDown 0.2s ease;
+  }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// Akordeon Alt Sayfalama
+.sub-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed v.$color-border;
+  flex-wrap: wrap;
+
+  &__info {
+    font-size: 0.78rem;
+    color: v.$color-text-muted;
+    font-weight: 600;
+  }
+
+  &__controls {
+    display: flex;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+  }
+
+  &__btn {
+    background: v.$color-surface-2;
+    border: 1px solid v.$color-border;
+    color: v.$color-text-muted;
+    padding: 0.35rem 0.7rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+
+    &:hover:not(:disabled) { background: v.$color-primary; color: #fff; border-color: v.$color-primary; }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+
+  &__page {
+    background: v.$color-surface-2;
+    border: 1px solid v.$color-border;
+    color: v.$color-text-muted;
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover { color: v.$color-text; border-color: v.$color-primary; }
+
+    &.active {
+      background: v.$color-primary;
+      color: #fff;
+      border-color: v.$color-primary;
+    }
+  }
+}
+
+.empty-state {
+  @include m.card;
+  text-align: center;
+  padding: 3rem 1.5rem;
+
+  &__icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.7; }
+
+  &__title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: v.$color-text;
+    margin-bottom: 0.4rem;
+  }
+
+  &__hint {
+    font-size: 0.9rem;
+    color: v.$color-text-muted;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+    max-width: 460px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.asset-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1rem;
+
+  @media (max-width: 420px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.asset-card {
+  @include m.card;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid v.$color-border;
+
+    @media (max-width: 500px) {
+      flex-direction: column;
+    }
+  }
+
+  &__info {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+
+    > div { display: flex; flex-direction: column; }
+  }
+
+  &__symbol {
+    background: v.$color-asset;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 0.3rem 0.55rem;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  &__name { font-weight: 700; font-size: 0.95rem; }
+
+  &__type {
+    font-size: 0.72rem;
+    color: v.$color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+    font-weight: 600;
+  }
+
+  &__value-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+
+    @media (max-width: 500px) {
+      align-items: flex-start;
+    }
+  }
+
+  &__value { font-weight: 800; font-size: 1.1rem; color: v.$color-text; }
+
+  &__profit {
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+
+    &.profit-positive {
+      color: v.$color-income;
+      background: rgba(34,197,94,0.12);
+    }
+    &.profit-negative {
+      color: v.$color-expense;
+      background: rgba(239,68,68,0.12);
+    }
+  }
+
+  &__details {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+
+    @media (max-width: 420px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  // Hesap kutusu
+  .calc-box {
+    background: v.$color-surface-2;
+    border-radius: v.$radius-sm;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border-left: 3px solid v.$color-asset;
+  }
+
+  &__bar {
+    height: 6px;
+    background: v.$color-surface-2;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  &__bar-fill {
+    height: 100%;
+    background: v.$color-asset;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: auto;
+
+    .btn {
+      flex: 1 1 calc(33.33% - 0.4rem);
+      justify-content: center;
+      text-align: center;
+      padding: 0.35rem 0.4rem;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    @media (max-width: 500px) {
+      .btn {
+        flex: 1 1 calc(50% - 0.4rem);
+      }
+    }
+  }
+}
+
+.calc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.78rem;
+  flex-wrap: wrap;
+
+  &__label {
+    color: v.$color-text-muted;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  &__formula {
+    color: v.$color-text-muted;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.78rem;
+    text-align: right;
+
+    strong { color: v.$color-text; font-weight: 700; font-size: 0.85rem; }
+  }
+
+  &__equals {
+    margin: 0 0.4rem;
+    color: v.$color-primary;
+    font-weight: 700;
+  }
+
+  &--profit {
+    padding-top: 0.5rem;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    margin-top: 0.2rem;
+  }
+
+  &--positive {
+    .calc-row__formula strong { color: v.$color-income; }
+    .calc-row__label { color: v.$color-income; }
+  }
+
+  &--negative {
+    .calc-row__formula strong { color: v.$color-expense; }
+    .calc-row__label { color: v.$color-expense; }
+  }
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+
+  &__label {
+    font-size: 0.7rem;
+    color: v.$color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  &__value {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: v.$color-text;
+  }
+}
+
+.portfolio-tabs {
+  display: inline-flex;
+  gap: 0.35rem;
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-sm;
+  padding: 0.3rem;
+  margin-bottom: 1rem;
+
+  @media (max-width: 500px) {
+    display: flex;
+    width: 100%;
+  }
+
+  &__btn {
+    border: 0;
+    background: transparent;
+    color: v.$color-text-muted;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    padding: 0.55rem 0.95rem;
+
+    @media (max-width: 500px) { flex: 1; }
+
+    &.active {
+      background: v.$color-primary;
+      color: #fff;
+    }
+  }
+}
+
+.trade-form {
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  border-radius: v.$radius-sm;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1rem;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+
+    strong { color: v.$color-text; }
+    span { color: v.$color-text-muted; font-size: 0.78rem; }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+
+    @media (max-width: 520px) { grid-template-columns: 1fr; }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      color: v.$color-text-muted;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    input, select { @include m.input-base; }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+  }
+}
+
+.trade-history { margin-top: 0.5rem; }
+
+.trade-table {
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-md;
+  overflow-x: auto;
+  background: v.$color-surface;
+
+  &__head,
+  &__row {
+    display: grid;
+    grid-template-columns: 110px minmax(160px, 1.2fr) 90px 110px 110px 150px 80px;
+    gap: 0.75rem;
+    align-items: center;
+    min-width: 850px;
+    padding: 0.85rem 1rem;
+  }
+
+  &__head {
+    color: v.$color-text-muted;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: v.$color-surface-2;
+  }
+
+  &__row {
+    border-top: 1px solid v.$color-border;
+    font-size: 0.88rem;
+
+    small {
+      display: block;
+      color: v.$color-text-muted;
+      margin-top: 0.1rem;
+    }
+  }
+}
+
+.trade-badge {
+  width: fit-content;
+  color: v.$color-income;
+  background: rgba(34, 197, 94, 0.12);
+  border-radius: 999px;
+  font-weight: 800;
+  padding: 0.25rem 0.6rem;
+
+  &--sell {
+    color: v.$color-expense;
+    background: rgba(239, 68, 68, 0.12);
+  }
+}
+
+// Görünüm Seçici (Segmented Control)
+.view-selector-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.segmented-control {
+  display: inline-flex;
+  gap: 0.25rem;
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-sm;
+  padding: 0.25rem;
+
+  &__btn {
+    border: 0;
+    background: transparent;
+    color: v.$color-text-muted;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 0.45rem 0.85rem;
+    transition: all 0.2s ease;
+
+    &.active {
+      background: v.$color-surface-2;
+      color: v.$color-primary;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.15);
+    }
+
+    &:hover:not(.active) {
+      color: v.$color-text;
+    }
+  }
+}
+
+// Portföy Isı Haritası (Treemap Heatmap)
+.heatmap-card {
+  @include m.card;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  padding: 1.2rem;
+  overflow: visible; // Tooltip'lerin taşabilmesi için
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-auto-rows: 110px;
+  gap: 6px;
+  width: 100%;
+  padding: 0.1rem;
+  box-sizing: border-box;
+}
+
+.heatmap-tile {
+  position: relative; // Tooltip positioning
+  box-sizing: border-box;
+  border-radius: 8px;
+  overflow: visible; // Allow tooltip to float outside cell boundaries
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s, filter 0.2s;
+  
+  &__content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    text-align: center;
+    padding: 0.4rem;
+    color: #fff;
+    user-select: none;
+    pointer-events: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+  }
+
+  &__symbol {
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1.5px 3px rgba(0, 0, 0, 0.5);
+    max-width: 95%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+
+    @media (max-width: 500px) {
+      font-size: 0.9rem;
+    }
+  }
+
+  &__percent {
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-shadow: 0 1.5px 3px rgba(0, 0, 0, 0.5);
+    max-width: 95%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+
+    @media (max-width: 500px) {
+      font-size: 0.78rem;
+    }
+  }
+
+  &__value {
+    font-size: 0.78rem;
+    opacity: 0.9;
+    text-shadow: 0 1.5px 3px rgba(0, 0, 0, 0.5);
+    max-width: 95%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+
+    @media (max-width: 700px) {
+      display: none; // Çok küçük ekranlarda gizle
+    }
+  }
+
+  // Performans Renk Kodlaması (Vibrant Borsa Değişkenleri ile)
+  &.profit-high {
+    background: var(--color-heatmap-profit-high);
+    &:hover { box-shadow: 0 8px 24px rgba(8, 153, 129, 0.5); }
+  }
+  &.profit-low {
+    background: var(--color-heatmap-profit-low);
+    &:hover { box-shadow: 0 8px 24px rgba(38, 166, 154, 0.5); }
+  }
+  &.neutral {
+    background: var(--color-heatmap-neutral);
+    &:hover { box-shadow: 0 8px 24px rgba(69, 79, 94, 0.5); }
+  }
+  &.loss-low {
+    background: var(--color-heatmap-loss-low);
+    &:hover { box-shadow: 0 8px 24px rgba(239, 83, 80, 0.5); }
+  }
+  &.loss-high {
+    background: var(--color-heatmap-loss-high);
+    &:hover { box-shadow: 0 8px 24px rgba(242, 54, 69, 0.5); }
+  }
+
+  &:hover {
+    z-index: 100;
+    transform: scale(1.03); // Tıklanabilir hissi için dışa doğru pop
+    filter: brightness(1.15); // Parlama efekti
+    
+    .heatmap-tile__tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+}
+
+// Hover Tooltip Detay Kartı
+.heatmap-tile__tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: v.$radius-md;
+  padding: 0.85rem 1rem;
+  width: 250px;
+  color: #f1f5f9;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+  z-index: 200; // Tooltip en üstte kalsın
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: rgba(15, 23, 42, 0.95) transparent transparent transparent;
+  }
+
+  strong {
+    font-size: 0.9rem;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 0.4rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.3rem;
+  }
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.2rem;
+  }
+
+  .tooltip-profit {
+    font-weight: 700;
+    margin-top: 0.4rem;
+    border-top: 1px dashed rgba(255, 255, 255, 0.15);
+    padding-top: 0.4rem;
+  }
+
+  .text-success { color: #4ade80 !important; }
+  .text-danger { color: #f87171 !important; }
+}
+
+// Fade-in animation
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes highlightPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.8);
+    border-color: v.$color-primary;
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 15px rgba(99, 102, 241, 0.2);
+    border-color: v.$color-primary;
+    transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+    transform: scale(1);
+  }
+}
+
+.highlight-pulse {
+  animation: highlightPulse 1.8s ease-out;
+  border: 1.5px solid v.$color-primary !important;
+  z-index: 50;
+}

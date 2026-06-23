@@ -1,0 +1,38 @@
+@use '../../../../styles/variables' as v;
+
+.offline-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 1.5rem;
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+  color: #fff;
+  border-bottom: 2px solid #b45309;
+  position: sticky;
+  top: 60px;
+  z-index: 89;
+  animation: slideDown 0.3s ease;
+  font-size: 0.9rem;
+
+  &__icon { font-size: 1.3rem; flex-shrink: 0; }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    flex: 1;
+
+    strong { font-weight: 700; font-size: 0.95rem; }
+    span { font-size: 0.82rem; opacity: 0.95; }
+  }
+
+  @media (max-width: 600px) {
+    padding: 0.6rem 1rem;
+    flex-wrap: wrap;
+  }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

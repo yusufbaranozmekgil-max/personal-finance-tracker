@@ -1,0 +1,122 @@
+<div class="accounts">
+  <div class="page-header">
+    <div class="page-title-block">
+      <h1 class="page-title">My Accounts</h1>
+      <span class="slot-badge">{{ accountService.accounts().length }} / {{ maxAccountCount }}</span>
+    </div>
+    <button class="btn btn--primary"
+            (click)="toggleForm()"
+            [disabled]="!showForm() && !editingId() && accountService.accounts().length >= maxAccountCount">
+      {{ showForm() ? '✕ Cancel' : '+ New Account' }}
+    </button>
+  </div>
+
+  <!-- Total Balance -->
+  <div class="total-card">
+    <p class="total-card__label">💰 Total Balance Across All Accounts</p>
+    <p class="total-card__value">{{ accountService.totalBalance() | money }}</p>
+  </div>
+
+  <!-- Form -->
+  @if (showForm()) {
+    <div class="form-card">
+      <h3>{{ editingId() ? 'Edit Account' : 'Add New Account' }}</h3>
+
+      @if (!editingId()) {
+        <div class="presets-section">
+          <span class="presets-label">Quick Select:</span>
+          <div class="presets">
+            @for (p of presets; track p.name) {
+              <button class="preset-chip" (click)="applyPreset(p)">
+                <span class="preset-chip__icon">{{ iconFor(p.type) }}</span>
+                <span>{{ p.name }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="form-grid">
+        <div class="field">
+          <label>Account Name *</label>
+          <input type="text" [(ngModel)]="form.name" maxlength="30" placeholder="Cash, Bank, Salary Account...">
+        </div>
+        <div class="field">
+          <label>Account Type</label>
+          <select [(ngModel)]="form.type">
+            @for (t of accountTypes; track t.value) {
+              <option [value]="t.value">{{ t.icon }} {{ t.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label>Opening Balance</label>
+          <input type="number" [(ngModel)]="form.initialBalance" step="any" placeholder="0.00">
+        </div>
+        <div class="field">
+          <label>Currency</label>
+          <select [(ngModel)]="form.currency">
+            <option value="TRY">₺ TRY</option>
+            <option value="USD">$ USD</option>
+            <option value="EUR">€ EUR</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn--primary" (click)="submit()">
+          {{ editingId() ? 'Update' : 'Add' }}
+        </button>
+        <button class="btn btn--ghost" (click)="cancel()">Cancel</button>
+      </div>
+    </div>
+  }
+
+  <!-- Account Cards -->
+  @if (accountService.accounts().length === 0) {
+    <div class="empty-state">
+      <p class="empty-state__icon">🏦</p>
+      <p class="empty-state__title">No accounts added yet.</p>
+      <p class="empty-state__hint">Get started by adding a cash wallet, bank account, or credit card.</p>
+    </div>
+  } @else {
+    <div class="account-grid">
+      @for (account of accountService.accounts(); track account.id) {
+        <div class="account-card" [attr.data-type]="account.type">
+          <div class="account-card__header">
+            <div class="account-card__title-block" [routerLink]="['/transactions']" [queryParams]="{ accountId: account.id }" style="cursor: pointer;">
+              <span class="account-card__icon">{{ iconFor(account.type) }}</span>
+              <div>
+                <h3 class="account-card__name">{{ account.name }}</h3>
+                <span class="account-card__type">{{ labelFor(account.type) }} · {{ account.currency }}</span>
+              </div>
+            </div>
+            <span class="account-card__tx-count" [routerLink]="['/transactions']" [queryParams]="{ accountId: account.id }" style="cursor: pointer;">
+              {{ accountService.transactionCountOf(account.id) }} transactions
+            </span>
+          </div>
+
+          <div class="account-card__balance" [routerLink]="['/transactions']" [queryParams]="{ accountId: account.id }" style="cursor: pointer;">
+            <span class="account-card__balance-label">Current Balance</span>
+            <span class="account-card__balance-value"
+                  [class.positive]="accountService.balanceOf(account.id) >= 0"
+                  [class.negative]="accountService.balanceOf(account.id) < 0">
+              {{ accountService.balanceOf(account.id) | money }}
+            </span>
+          </div>
+
+          @if (account.initialBalance !== 0) {
+            <p class="account-card__initial">
+              Opening: {{ account.initialBalance | money }}
+            </p>
+          }
+
+          <div class="account-card__actions">
+            <button class="btn btn--sm" (click)="startEdit(account)">Edit</button>
+            <button class="btn btn--sm btn--danger" (click)="remove(account)">Delete</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

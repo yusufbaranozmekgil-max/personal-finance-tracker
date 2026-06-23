@@ -1,0 +1,119 @@
+@use '../styles/variables' as v;
+@use '../styles/mixins' as m;
+
+.navbar {
+  @include m.flex-between;
+  background: v.$color-surface;
+  border-bottom: 1px solid v.$color-border;
+  padding: 0 2rem;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__icon { font-size: 1.4rem; }
+
+  &__title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: v.$color-text;
+    letter-spacing: 0.5px;
+  }
+
+  &__links {
+    display: flex;
+    list-style: none;
+    gap: 0.25rem;
+
+    a {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 1rem;
+      border-radius: v.$radius-sm;
+      color: v.$color-text-muted;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: background 0.2s, color 0.2s;
+
+      &:hover {
+        background: v.$color-surface-2;
+        color: v.$color-text;
+      }
+
+      &.active {
+        background: v.$color-primary;
+        color: #fff;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 8px 20px rgba(99, 102, 241, 0.28);
+        font-weight: 700;
+        position: relative;
+
+        &::after {
+          content: '';
+          position: absolute;
+          left: 1rem;
+          right: 1rem;
+          bottom: -0.45rem;
+          height: 3px;
+          background: #fff;
+          border-radius: 999px;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 760px) {
+    align-items: stretch;
+    flex-direction: column;
+    height: auto;
+    padding: 0.75rem 1rem;
+    gap: 0.75rem;
+
+    &__brand {
+      justify-content: center;
+    }
+
+    &__links {
+      overflow-x: auto;
+      padding-bottom: 0.15rem;
+      scrollbar-width: thin;
+
+      li {
+        flex: 0 0 auto;
+      }
+
+      a {
+        justify-content: center;
+        padding: 0.5rem 0.8rem;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  @media (max-width: 430px) {
+    &__links a {
+      font-size: 0.82rem;
+      padding: 0.48rem 0.65rem;
+    }
+  }
+}
+
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+
+  @media (max-width: 760px) {
+    padding: 1.25rem 1rem;
+  }
+
+  @media (max-width: 430px) {
+    padding: 1rem 0.75rem;
+  }
+}

@@ -1,0 +1,553 @@
+<div class="portfolio">
+  <div class="page-header">
+    <h1 class="page-title">Portfolio</h1>
+    <div class="page-actions">
+      @if (livePriceSupportedCount > 0) {
+        <button class="btn btn--secondary"
+                (click)="updateAllLivePrices()"
+                [disabled]="livePriceService.loading()">
+          {{ livePriceService.loading() ? 'Fetching live prices...' : 'Update Live Prices' }}
+        </button>
+      }
+      <button class="btn btn--primary" (click)="toggleForm()">
+        {{ showForm() ? '✕ Cancel' : '+ Add Asset' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Total Value Cards -->
+  <div class="total-grid">
+    <div class="total-card total-card--asset">
+      <p class="total-card__label">Total Portfolio Value</p>
+      <p class="total-card__value">{{ portfolioService.totalValue() | money }}</p>
+    </div>
+    <div class="total-card">
+      <p class="total-card__label">Total Cost</p>
+      <p class="total-card__value">{{ portfolioService.totalPurchase() | money }}</p>
+    </div>
+    <div class="total-card"
+         [class.total-card--income]="portfolioService.totalProfit() >= 0"
+         [class.total-card--expense]="portfolioService.totalProfit() < 0">
+      <p class="total-card__label">Total Profit / Loss</p>
+      <p class="total-card__value">
+        {{ portfolioService.totalProfit() >= 0 ? '+' : '' }}{{ portfolioService.totalProfit() | money }}
+      </p>
+    </div>
+    <div class="total-card"
+         [class.total-card--income]="portfolioService.totalRealizedProfit() >= 0"
+         [class.total-card--expense]="portfolioService.totalRealizedProfit() < 0">
+      <p class="total-card__label">Realized Profit / Loss</p>
+      <p class="total-card__value">
+        {{ portfolioService.totalRealizedProfit() >= 0 ? '+' : '' }}{{ portfolioService.totalRealizedProfit() | money }}
+      </p>
+    </div>
+  </div>
+
+  <div class="portfolio-tabs">
+    <button class="portfolio-tabs__btn"
+            [class.active]="activeTab() === 'holdings'"
+            (click)="setView('holdings')">
+      My Holdings
+    </button>
+    <button class="portfolio-tabs__btn"
+            [class.active]="activeTab() === 'history'"
+            (click)="setView('history')">
+      Trade History
+    </button>
+  </div>
+
+  @if (activeTab() === 'holdings') {
+
+  <!-- Form -->
+  @if (showForm()) {
+    <div class="form-card">
+      <h3>{{ editingId() ? 'Edit Asset' : 'Add New Asset' }}</h3>
+
+      @if (!editingId()) {
+        <div class="presets-section">
+          <span class="presets-label">Quick Select:</span>
+          <div class="presets">
+            @for (p of presets; track p.symbol) {
+              <button class="preset-chip" (click)="applyPreset(p)">
+                <strong>{{ p.symbol }}</strong>
+                <span>{{ p.name }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="form-grid">
+        <div class="field">
+          <label>Asset Name *</label>
+          <input type="text" [(ngModel)]="form.name" [maxlength]="maxNameLength" placeholder="Bitcoin, Gold Gram...">
+        </div>
+        <div class="field">
+          <label>Symbol *</label>
+          <input type="text" [(ngModel)]="form.symbol" [maxlength]="maxNameLength" placeholder="BTC, GA, THYAO">
+        </div>
+        <div class="field">
+          <label>Asset Type</label>
+          <select [(ngModel)]="form.type">
+            @for (t of assetTypes; track t) {
+              <option [value]="t">{{ t }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label>Currency</label>
+          <select [(ngModel)]="form.currency">
+            @for (c of assetCurrencies; track c) {
+              <option [value]="c">{{ c }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label>Quantity *</label>
+          <input type="number" [(ngModel)]="form.quantity" min="0.01" [max]="maxMoneyAmount" step="any" placeholder="0">
+        </div>
+        <div class="field">
+          <label>Buy Price ({{ form.currency }})</label>
+          <input type="number" [(ngModel)]="form.purchasePrice" min="0" [max]="maxMoneyAmount" step="any" placeholder="0.00">
+        </div>
+        <div class="field field--full">
+          <label>Current Price ({{ form.currency }}) *</label>
+          <input type="number" [(ngModel)]="form.unitPrice" min="0.01" [max]="maxMoneyAmount" step="any" placeholder="0.00">
+        </div>
+
+        @if (!editingId() && form.quantity > 0 && form.purchasePrice > 0) {
+          <div class="field field--full link-expense-field">
+            <label class="link-expense-checkbox">
+              <input type="checkbox" [(ngModel)]="linkAsExpense">
+              <span class="link-expense-checkbox__text">
+                💰 Record purchase as an expense and deduct from balance
+                <span class="link-expense-checkbox__hint">
+                  {{ form.quantity }} × {{ form.purchasePrice }} {{ form.currency }} will be
+                  automatically added as an expense under the <strong>"Investment"</strong> category.
+                </span>
+              </span>
+            </label>
+          </div>
+        }
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn--primary" (click)="submit()">
+          {{ editingId() ? 'Update' : 'Add' }}
+        </button>
+        <button class="btn btn--ghost" (click)="cancelForm()">Cancel</button>
+      </div>
+    </div>
+  }
+
+  @if (portfolioService.assets().length > 0) {
+    <!-- View Selector -->
+    <div class="view-selector-container">
+      <div class="segmented-control">
+        <button class="segmented-control__btn"
+                [class.active]="holdingsView() === 'list'"
+                (click)="holdingsView.set('list')">
+          📑 List View
+        </button>
+        <button class="segmented-control__btn"
+                [class.active]="holdingsView() === 'heatmap'"
+                (click)="holdingsView.set('heatmap')">
+          📊 Performance Map
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (holdingsView() === 'list') {
+    <!-- Category Management Toolbar -->
+    @if (portfolioService.assets().length > 0 || showCategoryForm()) {
+      <div class="category-toolbar">
+        <div class="category-toolbar__left">
+          <button class="btn btn--sm btn--ghost" (click)="expandAll()" title="Expand all categories">
+            ⊞ Expand All
+          </button>
+          <button class="btn btn--sm btn--ghost" (click)="collapseAll()" title="Collapse all categories">
+            ⊟ Collapse All
+          </button>
+        </div>
+        <button class="btn btn--sm btn--secondary" (click)="toggleCategoryForm()">
+          {{ showCategoryForm() ? '✕ Cancel' : '+ New Category' }}
+        </button>
+      </div>
+    }
+
+    @if (showCategoryForm()) {
+      <div class="category-form">
+        <input type="text"
+               [ngModel]="newCategoryName()"
+               (ngModelChange)="newCategoryName.set($event)"
+               (keyup.enter)="addCategory()"
+               placeholder="e.g.: NFT, Bond, Commodity..."
+               maxlength="20">
+        <button class="btn btn--primary btn--sm" (click)="addCategory()">Add</button>
+      </div>
+    }
+  }
+
+  <!-- Empty State -->
+  @if (portfolioService.assets().length === 0) {
+    <div class="empty-state">
+      <p class="empty-state__icon">📈</p>
+      <p class="empty-state__title">No investment assets added yet.</p>
+      <p class="empty-state__hint">Start tracking your investments by adding assets like Bitcoin, gold, stocks, or currencies to your portfolio.</p>
+      <button class="btn btn--primary" (click)="toggleForm()">+ Add First Asset</button>
+    </div>
+  } @else {
+    @if (holdingsView() === 'list') {
+      <!-- Category Accordions -->
+      <div class="category-list">
+      @for (type of displayedCategories; track type) {
+        <div class="category" [class.category--empty]="assetsByType(type).length === 0">
+          <button class="category__header"
+                  (click)="toggleCategory(type)"
+                  [disabled]="assetsByType(type).length === 0">
+            <span class="category__chevron" [class.expanded]="isExpanded(type)">▶</span>
+            <span class="category__icon">{{ iconFor(type) }}</span>
+            <span class="category__name">{{ type }}</span>
+            <span class="category__count">{{ assetsByType(type).length }} assets</span>
+
+            @if (assetsByType(type).length > 0) {
+              <span class="category__value">{{ categoryTotal(type) | money }}</span>
+              <span class="category__profit"
+                    [class.profit-positive]="categoryProfit(type) >= 0"
+                    [class.profit-negative]="categoryProfit(type) < 0">
+                {{ categoryProfit(type) >= 0 ? '+' : '' }}{{ categoryProfit(type) | money }}
+              </span>
+            } @else {
+              <span class="category__empty-hint">Empty</span>
+              <span class="category__delete"
+                    (click)="$event.stopPropagation(); removeCategory(type)"
+                    title="Delete category">✕</span>
+            }
+          </button>
+
+          @if (isExpanded(type) && assetsByType(type).length > 0) {
+            <div class="category__body">
+              <div class="asset-list">
+                @for (asset of paginatedAssets(type); track asset.id) {
+                  <div class="asset-card" [id]="'asset-card-' + asset.id">
+                    <div class="asset-card__header">
+                      <div class="asset-card__info">
+                        <span class="asset-card__symbol">{{ asset.symbol }}</span>
+                        <div>
+                          <span class="asset-card__name">{{ asset.name }}</span>
+                          <span class="asset-card__type">{{ asset.type }} · {{ asset.currency }}</span>
+                        </div>
+                      </div>
+                      <div class="asset-card__value-block">
+                        <span class="asset-card__value">{{ portfolioService.currentValueTRY(asset) | money }}</span>
+                        <span class="asset-card__profit"
+                              [class.profit-positive]="portfolioService.profitTRY(asset) >= 0"
+                              [class.profit-negative]="portfolioService.profitTRY(asset) < 0">
+                          {{ portfolioService.profitTRY(asset) >= 0 ? '+' : '' }}{{ portfolioService.profitTRY(asset) | money }}
+                          ({{ portfolioService.profitPercent(asset) >= 0 ? '+' : '' }}{{ portfolioService.profitPercent(asset) | number:'1.1-2' }}%)
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="asset-card__details">
+                      <div class="detail-item">
+                        <span class="detail-item__label">Quantity</span>
+                        <span class="detail-item__value">{{ asset.quantity }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-item__label">Buy Price</span>
+                        <span class="detail-item__value">{{ asset.purchasePrice }} {{ asset.currency }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-item__label">Current Price</span>
+                        <span class="detail-item__value">{{ asset.unitPrice }} {{ asset.currency }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-item__label">Portfolio Share</span>
+                        <span class="detail-item__value">{{ assetPercent(asset) | number:'1.1-1' }}%</span>
+                      </div>
+                    </div>
+
+                    <div class="calc-box">
+                      <div class="calc-row">
+                        <span class="calc-row__label">📊 Total Value</span>
+                        <span class="calc-row__formula">
+                          {{ asset.quantity }} × {{ asset.unitPrice }} {{ asset.currency }}
+                          <span class="calc-row__equals">=</span>
+                          <strong>{{ (asset.quantity * asset.unitPrice) | number:'1.2-2' }} {{ asset.currency }}</strong>
+                        </span>
+                      </div>
+                      <div class="calc-row">
+                        <span class="calc-row__label">💰 Cost</span>
+                        <span class="calc-row__formula">
+                          {{ asset.quantity }} × {{ asset.purchasePrice }} {{ asset.currency }}
+                          <span class="calc-row__equals">=</span>
+                          <strong>{{ (asset.quantity * asset.purchasePrice) | number:'1.2-2' }} {{ asset.currency }}</strong>
+                        </span>
+                      </div>
+                      <div class="calc-row calc-row--profit"
+                           [class.calc-row--positive]="portfolioService.profitTRY(asset) >= 0"
+                           [class.calc-row--negative]="portfolioService.profitTRY(asset) < 0">
+                        <span class="calc-row__label">
+                          {{ portfolioService.profitTRY(asset) >= 0 ? '📈 Profit' : '📉 Loss' }}
+                        </span>
+                        <span class="calc-row__formula">
+                          Current − Buy
+                          <span class="calc-row__equals">=</span>
+                          <strong>
+                            {{ portfolioService.profitTRY(asset) >= 0 ? '+' : '' }}{{ portfolioService.profitTRY(asset) | money }}
+                          </strong>
+                        </span>
+                      </div>
+                      <div class="calc-row calc-row--profit"
+                           [class.calc-row--positive]="realizedProfitTRY(asset) >= 0"
+                           [class.calc-row--negative]="realizedProfitTRY(asset) < 0">
+                        <span class="calc-row__label">FIFO Realized</span>
+                        <span class="calc-row__formula">
+                          Sell profit/loss
+                          <span class="calc-row__equals">=</span>
+                          <strong>
+                            {{ realizedProfitTRY(asset) >= 0 ? '+' : '' }}{{ realizedProfitTRY(asset) | money }}
+                          </strong>
+                        </span>
+                      </div>
+                      <div class="calc-row calc-row--profit"
+                           [class.calc-row--positive]="unrealizedProfitTRY(asset) >= 0"
+                           [class.calc-row--negative]="unrealizedProfitTRY(asset) < 0">
+                        <span class="calc-row__label">Unrealized</span>
+                        <span class="calc-row__formula">
+                          Current FIFO value
+                          <span class="calc-row__equals">=</span>
+                          <strong>
+                            {{ unrealizedProfitTRY(asset) >= 0 ? '+' : '' }}{{ unrealizedProfitTRY(asset) | money }}
+                          </strong>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="asset-card__bar">
+                      <div class="asset-card__bar-fill" [style.width.%]="assetPercent(asset)"></div>
+                    </div>
+
+                    @if (quickPriceId() === asset.id) {
+                      <div class="quick-price">
+                        <label>💲 New Current Price ({{ asset.currency }})</label>
+                        <div class="quick-price__input-row">
+                          <input type="number"
+                                 [ngModel]="quickPriceValue()"
+                                 (ngModelChange)="quickPriceValue.set($event)"
+                                 min="0.01" [max]="maxMoneyAmount" step="any">
+                          <button class="btn btn--sm btn--primary" (click)="saveQuickPrice(asset)">✓</button>
+                          <button class="btn btn--sm btn--ghost" (click)="cancelQuickPrice()">✕</button>
+                        </div>
+                        <p class="quick-price__hint">Previous price: {{ asset.unitPrice }} {{ asset.currency }}</p>
+                      </div>
+                    }
+
+                    @if (tradeFormAssetId() === asset.id) {
+                      <div class="trade-form">
+                        <div class="trade-form__header">
+                          <strong>{{ tradeForm.type === 'buy' ? 'Buy Trade' : 'Sell Trade' }}</strong>
+                          <span>FIFO cost tracking</span>
+                        </div>
+                        <div class="trade-form__grid">
+                          <label>
+                            Type
+                            <select [(ngModel)]="tradeForm.type">
+                              <option value="buy">Buy</option>
+                              <option value="sell">Sell</option>
+                            </select>
+                          </label>
+                          <label>
+                            Date
+                            <input type="date" [(ngModel)]="tradeForm.date">
+                          </label>
+                          <label>
+                            Quantity
+                            <input type="number" [(ngModel)]="tradeForm.quantity" min="0.00000001" [max]="maxMoneyAmount" step="any">
+                          </label>
+                          <label>
+                            Price ({{ asset.currency }})
+                            <input type="number" [(ngModel)]="tradeForm.price" min="0.01" [max]="maxMoneyAmount" step="any">
+                          </label>
+                        </div>
+                        <div class="trade-form__actions">
+                          <button class="btn btn--sm btn--primary" (click)="submitTrade(asset)">Save</button>
+                          <button class="btn btn--sm btn--ghost" (click)="cancelTradeForm()">Cancel</button>
+                        </div>
+                      </div>
+                    }
+
+                    <div class="asset-card__actions">
+                      @if (livePriceService.supports(asset.symbol)) {
+                        <button class="btn btn--sm btn--live"
+                                (click)="updateLivePrice(asset)"
+                                [disabled]="livePriceService.loading() || livePriceUpdatingId() === asset.id"
+                                title="Update live price via Binance">
+                          {{ livePriceUpdatingId() === asset.id ? 'Updating...' : '🔴 Live' }}
+                        </button>
+                      } @else if (livePriceService.category(asset.symbol) === 'bist') {
+                        <span class="btn btn--sm btn--manual"
+                              title="No free live price service available for BIST stocks. Please update the price manually.">
+                          ⓘ Manual
+                        </span>
+                      }
+                      <button class="btn btn--sm btn--secondary" (click)="openQuickPrice(asset)" title="Quick price update">
+                        💲 Price
+                      </button>
+                      <button class="btn btn--sm btn--live" (click)="openTradeForm(asset, 'buy')">Buy</button>
+                      <button class="btn btn--sm btn--secondary" (click)="openTradeForm(asset, 'sell')">Sell</button>
+                      <button class="btn btn--sm" (click)="startEdit(asset)">Edit</button>
+                      <button class="btn btn--sm btn--danger" (click)="remove(asset.id)">Delete</button>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              @if (assetsByType(type).length > categoryPageSize) {
+                <div class="sub-pagination">
+                  <span class="sub-pagination__info">
+                    {{ categoryPageStart(type, assetsByType(type).length) }}-{{ categoryPageEnd(type, assetsByType(type).length) }}
+                    / {{ assetsByType(type).length }}
+                  </span>
+                  <div class="sub-pagination__controls">
+                    <button class="sub-pagination__btn"
+                            (click)="prevCategoryPage(type, assetsByType(type).length)"
+                            [disabled]="getCategoryPage(type) === 1">
+                      ← Previous
+                    </button>
+                    @for (page of categoryPageNumbers(assetsByType(type).length); track page) {
+                      <button class="sub-pagination__page"
+                              [class.active]="getCategoryPage(type) === page"
+                              (click)="setCategoryPage(type, page, assetsByType(type).length)">
+                        {{ page }}
+                      </button>
+                    }
+                    <button class="sub-pagination__btn"
+                            (click)="nextCategoryPage(type, assetsByType(type).length)"
+                            [disabled]="getCategoryPage(type) === categoryTotalPages(assetsByType(type).length)">
+                      Next →
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+    }
+
+    @if (holdingsView() === 'heatmap') {
+      <!-- Heatmap View -->
+      <div class="heatmap-card">
+        <div class="heatmap-grid">
+          @for (node of heatmapNodes(); track node.asset.id) {
+            <div class="heatmap-tile" 
+                 [class.profit-high]="node.profitPercent >= 5"
+                 [class.profit-low]="node.profitPercent > 0 && node.profitPercent < 5"
+                 [class.loss-low]="node.profitPercent < 0 && node.profitPercent > -5"
+                 [class.loss-high]="node.profitPercent <= -5"
+                 [class.neutral]="node.profitPercent === 0"
+                 (click)="onNodeClick(node)">
+              <div class="heatmap-tile__content">
+                <span class="heatmap-tile__symbol">{{ node.asset.symbol }}</span>
+                <span class="heatmap-tile__percent">{{ node.profitPercent >= 0 ? '+' : '' }}{{ node.profitPercent | number:'1.1-2' }}%</span>
+                <span class="heatmap-tile__value">{{ node.valueTRY | money }}</span>
+              </div>
+              
+              <div class="heatmap-tile__tooltip">
+                <strong>{{ node.asset.name }} ({{ node.asset.symbol }})</strong>
+                <div>Type: {{ node.asset.type }}</div>
+                <div>Quantity: {{ node.asset.quantity }} {{ node.asset.currency }}</div>
+                <div>Cost: {{ portfolioService.purchaseCostTRY(node.asset) | money }}</div>
+                <div>Current Value: {{ node.valueTRY | money }}</div>
+                <div>Portfolio Weight: {{ node.weight | number:'1.1-2' }}%</div>
+                <div [class.text-success]="node.profitPercent >= 0" [class.text-danger]="node.profitPercent < 0" class="tooltip-profit">
+                  Profit/Loss: {{ node.profitPercent >= 0 ? '+' : '' }}{{ portfolioService.profitTRY(node.asset) | money }} ({{ node.profitPercent >= 0 ? '+' : '' }}{{ node.profitPercent | number:'1.1-2' }}%)
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+  } @else {
+    <div class="trade-history">
+      @if (portfolioService.tradeHistory().length === 0) {
+        <div class="empty-state">
+          <p class="empty-state__icon">📜</p>
+          <p class="empty-state__title">No buy/sell trades yet.</p>
+          <p class="empty-state__hint">When you add Buy or Sell trades from asset cards, the FIFO history will appear here.</p>
+        </div>
+      } @else {
+        <div class="trade-table">
+          <div class="trade-table__head">
+            <span>Date</span>
+            <span>Asset</span>
+            <span>Type</span>
+            <span>Quantity</span>
+            <span>Price</span>
+            <span>Realized P/L</span>
+            <span>Action</span>
+          </div>
+          @for (trade of paginatedTradeHistory; track trade.id) {
+            <div class="trade-table__row">
+              <span>{{ trade.date }}</span>
+              <span>
+                <strong>{{ trade.assetSymbol }}</strong>
+                <small>{{ trade.assetName }}</small>
+              </span>
+              <span class="trade-badge" [class.trade-badge--sell]="trade.type === 'sell'">
+                {{ trade.type === 'buy' ? 'Buy' : 'Sell' }}
+              </span>
+              <span>{{ trade.quantity | number:'1.0-8' }}</span>
+              <span>{{ trade.price | number:'1.2-2' }}</span>
+              <span [class.profit-positive]="(trade.realizedProfit ?? 0) >= 0"
+                    [class.profit-negative]="(trade.realizedProfit ?? 0) < 0">
+                @if (trade.type === 'sell') {
+                  {{ (trade.realizedProfit ?? 0) >= 0 ? '+' : '' }}{{ tradeProfitTRY(trade) | money }}
+                } @else {
+                  -
+                }
+              </span>
+              <span>
+                <button class="btn btn--sm btn--danger" (click)="removeTrade(trade)">Delete</button>
+              </span>
+            </div>
+          }
+        </div>
+
+        @if (portfolioService.tradeHistory().length > historyPageSize) {
+          <div class="sub-pagination" style="margin-top: 1.5rem;">
+            <span class="sub-pagination__info">
+              {{ historyPageStart }}-{{ historyPageEnd }} / {{ portfolioService.tradeHistory().length }}
+            </span>
+            <div class="sub-pagination__controls">
+              <button class="sub-pagination__btn"
+                      (click)="prevHistoryPage()"
+                      [disabled]="currentHistoryPage() === 1">
+                ← Previous
+              </button>
+              @for (page of historyPageNumbers; track page) {
+                <button class="sub-pagination__page"
+                        [class.active]="currentHistoryPage() === page"
+                        (click)="setHistoryPage(page)">
+                  {{ page }}
+                </button>
+              }
+              <button class="sub-pagination__btn"
+                      (click)="nextHistoryPage()"
+                      [disabled]="currentHistoryPage() === historyTotalPages">
+                Next →
+              </button>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  }
+
+</div>

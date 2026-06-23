@@ -1,0 +1,599 @@
+<div class="dashboard">
+  <h1 class="page-title">Dashboard</h1>
+
+  <!-- Budget Alert -->
+  @if (budgetExceeded) {
+    <div class="budget-alert">
+      ⚠️ You have exceeded your monthly budget limit! ({{ budgetUsed | money }} / {{ budgetLimit | money }})
+    </div>
+  }
+
+  <!-- Tab Selector (Tab Bar) -->
+  <div class="dashboard-tabs">
+    <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'finance'" (click)="setActiveTab('finance')">
+      💰 Financial Status
+    </button>
+    <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'portfolio'" (click)="setActiveTab('portfolio')">
+      💼 Assets & Portfolio
+    </button>
+    <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'budget'" (click)="setActiveTab('budget')">
+      🔮 Budget & AI Forecast
+    </button>
+  </div>
+
+  <!-- 💰 FINANCIAL STATUS TAB -->
+  @if (activeTab() === 'finance') {
+    <!-- Date Filter Bar -->
+    <div class="dashboard-filter-bar animate-fade-in">
+      <div class="preset-group">
+        <button class="preset-btn" [class.active]="dashboardPreset() === 'all'" (click)="applyPreset('all')">All Time</button>
+        <button class="preset-btn" [class.active]="dashboardPreset() === 'thisMonth'" (click)="applyPreset('thisMonth')">This Month</button>
+        <button class="preset-btn" [class.active]="dashboardPreset() === 'lastMonth'" (click)="applyPreset('lastMonth')">Last Month</button>
+        <button class="preset-btn" [class.active]="dashboardPreset() === 'last30'" (click)="applyPreset('last30')">Last 30 Days</button>
+        <button class="preset-btn" [class.active]="dashboardPreset() === 'last90'" (click)="applyPreset('last90')">Last 3 Months</button>
+      </div>
+      <div class="custom-dates">
+        <div class="date-input-wrapper">
+          <label>Start</label>
+          <input type="date" [ngModel]="filterDateStart()" (ngModelChange)="onDateStartChange($event)">
+        </div>
+        <span class="date-separator">→</span>
+        <div class="date-input-wrapper">
+          <label>End</label>
+          <input type="date" [ngModel]="filterDateEnd()" (ngModelChange)="onDateEndChange($event)">
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid animate-fade-in">
+      <div class="card card--income">
+        <p class="card__label">Total Income</p>
+        <p class="card__value">{{ dashboardTotalIncome | money }}</p>
+      </div>
+
+      <div class="card card--expense">
+        <p class="card__label">Total Expense</p>
+        <p class="card__value">{{ dashboardTotalExpense | money }}</p>
+      </div>
+
+      <div class="card" [class.card--income]="dashboardBalance >= 0" [class.card--expense]="dashboardBalance < 0">
+        <p class="card__label">Net Balance</p>
+        <p class="card__value">{{ dashboardBalance | money }}</p>
+      </div>
+    </div>
+
+    <!-- Analytics Cards -->
+    <div class="analytics-grid animate-fade-in">
+      <!-- Top spending category this month -->
+      <div class="analytics-card analytics-card--expense">
+        <p class="analytics-card__icon">🏆</p>
+        <p class="analytics-card__label">Top Spending This Month</p>
+        @if (topExpenseCategory) {
+          <p class="analytics-card__title">{{ topExpenseCategory.category }}</p>
+          <p class="analytics-card__value">{{ topExpenseCategory.total | money }}</p>
+        } @else {
+          <p class="analytics-card__empty">No expenses this month yet</p>
+        }
+      </div>
+
+      <!-- Daily average -->
+      <div class="analytics-card analytics-card--warning">
+        <p class="analytics-card__icon">📅</p>
+        <p class="analytics-card__label">Daily Average Spending</p>
+        <p class="analytics-card__value">{{ dailyAverageExpense | money }}</p>
+        @if (dailyAverageExpense > 0) {
+          <p class="analytics-card__hint">
+            At this rate, you'll spend approximately <strong>{{ projectedMonthlyExpense | money }}</strong> by the end of the month.
+          </p>
+        }
+      </div>
+
+      <!-- Highest expense -->
+      <div class="analytics-card analytics-card--expense">
+        <p class="analytics-card__icon">📉</p>
+        <p class="analytics-card__label">Highest Expense</p>
+        @if (highestExpense) {
+          <p class="analytics-card__title">{{ highestExpense.category }}</p>
+          <p class="analytics-card__value">{{ highestExpense.amount | money }}</p>
+          <p class="analytics-card__hint">{{ highestExpense.date }}</p>
+        } @else {
+          <p class="analytics-card__empty">No expense records yet</p>
+        }
+      </div>
+
+      <!-- Highest income -->
+      <div class="analytics-card analytics-card--income">
+        <p class="analytics-card__icon">📈</p>
+        <p class="analytics-card__label">Highest Income</p>
+        @if (highestIncome) {
+          <p class="analytics-card__title">{{ highestIncome.category }}</p>
+          <p class="analytics-card__value">{{ highestIncome.amount | money }}</p>
+          <p class="analytics-card__hint">{{ highestIncome.date }}</p>
+        } @else {
+          <p class="analytics-card__empty">No income records yet</p>
+        }
+      </div>
+    </div>
+
+    <!-- Accordions and Charts -->
+    <div class="dash-grid animate-fade-in">
+      <!-- Expense Summary by Category -->
+      <div class="dash-section" [class.dash-section--open]="isSectionOpen('expenseSummary')">
+        <button class="dash-section__toggle" (click)="toggleSection('expenseSummary')">
+          <span class="dash-section__chevron" [class.expanded]="isSectionOpen('expenseSummary')">▶</span>
+          <span class="dash-section__icon">📊</span>
+          <span class="dash-section__title">Expense Summary by Category</span>
+          <span class="dash-section__current"
+                [class.dash-section__current--active]="categoryExpensesWithPercent.length > 0">
+            {{ totalCategoryExpense | money }}
+          </span>
+          @if (categoryExpensesWithPercent.length > 0) {
+            <span class="dash-section__badge">{{ categoryExpensesWithPercent.length }} categories</span>
+          }
+        </button>
+        @if (isSectionOpen('expenseSummary')) {
+          <div class="dash-section__body">
+            @if (categoryExpensesWithPercent.length === 0) {
+              <p class="dash-section__empty">No expense records yet.</p>
+            } @else {
+              <div class="expense-summary-list">
+                @for (item of categoryExpensesWithPercent; track item.category) {
+                  <div class="expense-summary-row" (click)="goToCategoryTransactions(item.category)" style="cursor: pointer;">
+                    <div class="expense-summary-row__top">
+                      <span class="expense-summary-row__category">
+                        {{ categoryService.iconOf(item.category, 'expense') }} {{ item.category }}
+                        <span class="share-percent">({{ item.share | number:'1.0-1' }}%)</span>
+                      </span>
+                      <span class="expense-summary-row__amount">{{ item.total | money }}</span>
+                    </div>
+                    <div class="expense-summary-row__bar">
+                      <span [style.width.%]="item.percent" [style.background]="categoryService.colorOf(item.category, 'expense')"></span>
+                    </div>
+                  </div>
+                }
+              </div>
+              <a routerLink="/transactions" class="link dash-section__link">View Details →</a>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="dash-section" [class.dash-section--open]="isSectionOpen('recent')">
+        <button class="dash-section__toggle" (click)="toggleSection('recent')">
+          <span class="dash-section__chevron" [class.expanded]="isSectionOpen('recent')">▶</span>
+          <span class="dash-section__icon">📋</span>
+          <span class="dash-section__title">Recent Transactions</span>
+          <span class="dash-section__current"
+                [class.dash-section__current--active]="last5Transactions.length > 0">
+            {{ last5Transactions.length }} transactions
+          </span>
+        </button>
+        @if (isSectionOpen('recent')) {
+          <div class="dash-section__body">
+            @if (last5Transactions.length === 0) {
+              <p class="dash-section__empty">No transactions added yet.</p>
+            } @else {
+              <ul class="recent-list">
+                @for (tx of last5Transactions; track tx.id) {
+                  <li class="recent-item" [class.recent-item--income]="tx.type === 'income'">
+                    <span class="recent-item__icon">{{ tx.type === 'income' ? '↑' : '↓' }}</span>
+                    <div class="recent-item__info">
+                      <span class="recent-item__category">{{ tx.category }}</span>
+                      <span class="recent-item__desc">{{ tx.description || tx.date }}</span>
+                    </div>
+                    <span class="recent-item__amount">
+                      {{ tx.type === 'income' ? '+' : '-' }}{{ tx.amount | money }}
+                    </span>
+                  </li>
+                }
+              </ul>
+              <a routerLink="/transactions" class="link dash-section__link">View All →</a>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Category Distribution Donut Chart -->
+      <div class="dash-section" [class.dash-section--open]="isSectionOpen('donutChart')">
+        <button class="dash-section__toggle" (click)="toggleSection('donutChart')">
+          <span class="dash-section__chevron" [class.expanded]="isSectionOpen('donutChart')">▶</span>
+          <span class="dash-section__icon">🍩</span>
+          <span class="dash-section__title">Category Distribution</span>
+          <span class="dash-section__current"
+                [class.dash-section__current--active]="categoryExpenses.length > 0">
+            {{ categoryExpenses.length }} categories
+          </span>
+        </button>
+        @if (isSectionOpen('donutChart')) {
+          <div class="dash-section__body dash-section__chart">
+            @if (categoryExpenses.length) {
+              <div class="chart-layout">
+                <div class="chart-canvas-wrapper">
+                  <canvas #donutChart></canvas>
+                </div>
+                <div class="custom-legend">
+                  @for (item of categoryExpensesWithPercent; track item.category) {
+                    <div class="legend-item" (click)="goToCategoryTransactions(item.category)" style="cursor: pointer;">
+                      <span class="legend-badge" [style.background]="categoryService.colorOf(item.category, 'expense')"></span>
+                      <span class="legend-icon">{{ categoryService.iconOf(item.category, 'expense') }}</span>
+                      <span class="legend-label">{{ item.category }}</span>
+                      <span class="legend-percent">{{ item.share | number:'1.0-1' }}%</span>
+                      <span class="legend-value">{{ item.total | money }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            } @else {
+              <p class="dash-section__empty">No expense records yet.</p>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Last 6 Months Income / Expense -->
+      <div class="dash-section" [class.dash-section--open]="isSectionOpen('barChart')">
+        <button class="dash-section__toggle" (click)="toggleSection('barChart')">
+          <span class="dash-section__chevron" [class.expanded]="isSectionOpen('barChart')">▶</span>
+          <span class="dash-section__icon">📊</span>
+          <span class="dash-section__title">Last 6 Months Income / Expense</span>
+          <span class="dash-section__current"
+                [class.dash-section__current--active]="txService.transactions().length > 0">
+            Last 6 Months
+          </span>
+        </button>
+        @if (isSectionOpen('barChart')) {
+          <div class="dash-section__body dash-section__chart">
+            @if (txService.transactions().length) {
+              <div class="chart-canvas-wrapper--full">
+                <canvas #barChart></canvas>
+              </div>
+            } @else {
+              <p class="dash-section__empty">No transactions yet.</p>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- 💼 ASSETS & PORTFOLIO TAB -->
+  @if (activeTab() === 'portfolio') {
+    <!-- Summary Cards -->
+    <div class="summary-grid animate-fade-in">
+      <div class="card card--asset">
+        <p class="card__label">Portfolio Value</p>
+        <p class="card__value">{{ portfolioService.totalValue() | money }}</p>
+      </div>
+
+      <div class="card" [class.card--income]="netWorth >= 0" [class.card--expense]="netWorth < 0">
+        <p class="card__label">Overall Net Worth</p>
+        <p class="card__value">{{ netWorth | money }}</p>
+      </div>
+    </div>
+
+    <!-- Accordions and Charts -->
+    <div class="dash-grid animate-fade-in">
+      <!-- Account Balances -->
+      <div class="dash-section" [class.dash-section--open]="isSectionOpen('accounts')">
+        <button class="dash-section__toggle" (click)="toggleSection('accounts')">
+          <span class="dash-section__chevron" [class.expanded]="isSectionOpen('accounts')">▶</span>
+          <span class="dash-section__icon">🏦</span>
+          <span class="dash-section__title">Account Balances</span>
+          <span class="dash-section__current"
+                [class.dash-section__current--active]="accountService.accounts().length > 0">
+            {{ accountService.totalBalance() | money }}
+          </span>
+          @if (accountService.accounts().length > 0) {
+            <span class="dash-section__badge">{{ accountService.accounts().length }} accounts</span>
+          }
+        </button>
+        @if (isSectionOpen('accounts')) {
+          <div class="dash-section__body">
+            @if (accountService.accounts().length === 0) {
+              <p class="dash-section__empty">No accounts added yet.</p>
+            } @else {
+              <ul class="account-list">
+                @for (acc of accountService.accounts(); track acc.id) {
+                  <li class="account-row" (click)="goToAccountTransactions(acc.id)" style="cursor: pointer;">
+                    <span class="account-row__icon">{{ accountService.iconFor(acc.type) }}</span>
+                    <div class="account-row__info">
+                      <span class="account-row__name">{{ acc.name }}</span>
+                      <span class="account-row__type">{{ accountService.labelFor(acc.type) }}</span>
+                    </div>
+                    <span class="account-row__balance"
+                          [class.positive]="accountService.balanceOf(acc.id) >= 0"
+                          [class.negative]="accountService.balanceOf(acc.id) < 0">
+                      {{ accountService.balanceOf(acc.id) | money }}
+                    </span>
+                  </li>
+                }
+              </ul>
+              <a routerLink="/accounts" class="link dash-section__link">All Accounts →</a>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Portfolio Type Distribution -->
+      <div class="dash-section" [class.dash-section--open]="isSectionOpen('portfolioChart')">
+        <button class="dash-section__toggle" (click)="toggleSection('portfolioChart')">
+          <span class="dash-section__chevron" [class.expanded]="isSectionOpen('portfolioChart')">▶</span>
+          <span class="dash-section__icon">💼</span>
+          <span class="dash-section__title">Portfolio Type Distribution</span>
+          <span class="dash-section__current"
+                [class.dash-section__current--active]="portfolioByType.length > 0">
+            {{ portfolioByType.length }} types
+          </span>
+        </button>
+        @if (isSectionOpen('portfolioChart')) {
+          <div class="dash-section__body dash-section__chart">
+            @if (portfolioByType.length) {
+              <div class="chart-layout">
+                <div class="chart-canvas-wrapper">
+                  <canvas #portfolioChart></canvas>
+                </div>
+                <div class="custom-legend">
+                  @for (item of portfolioByTypeWithPercent; track item.type; let idx = $index) {
+                    <div class="legend-item" (click)="goToPortfolioType(item.type)" style="cursor: pointer;">
+                      <span class="legend-badge" [style.background]="portfolioColors[idx]"></span>
+                      <span class="legend-label">{{ item.type }}</span>
+                      <span class="legend-percent">{{ item.percent | number:'1.0-1' }}%</span>
+                      <span class="legend-value">{{ item.total | money }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            } @else {
+              <p class="dash-section__empty">No assets in portfolio yet.</p>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Historical Net Worth Trend -->
+      <div class="dash-section" [class.dash-section--open]="isSectionOpen('trendChart')">
+        <button class="dash-section__toggle" (click)="toggleSection('trendChart')">
+          <span class="dash-section__chevron" [class.expanded]="isSectionOpen('trendChart')">▶</span>
+          <span class="dash-section__icon">📈</span>
+          <span class="dash-section__title">Historical Net Worth Trend</span>
+          <span class="dash-section__current"
+                [class.dash-section__current--active]="netWorthHistoryService.snapshots().length > 0">
+            Last 6 Months
+          </span>
+        </button>
+        @if (isSectionOpen('trendChart')) {
+          <div class="dash-section__body dash-section__chart">
+            @if (netWorthHistoryService.snapshots().length > 0) {
+              <div class="chart-canvas-wrapper--full">
+                <canvas #trendChart></canvas>
+              </div>
+            } @else {
+              <p class="dash-section__empty">No historical data yet.</p>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- 🔮 BUDGET & AI FORECAST TAB -->
+  @if (activeTab() === 'budget') {
+    <!-- Summary Cards -->
+    <div class="summary-grid animate-fade-in">
+      <div class="card card--month">
+        <p class="card__label">This Month's Spending</p>
+        <p class="card__value">{{ budgetUsed | money }}</p>
+      </div>
+    </div>
+
+    <!-- Monthly Budget Panel -->
+    <div class="budget-panel animate-fade-in" [class]="'budget-panel--' + budgetStatus" style="margin-bottom: 1.5rem;">
+      <div class="budget-panel__header">
+        <div>
+          <h2 class="budget-panel__title">📊 Monthly Budget Status</h2>
+          <p class="budget-panel__month">{{ currentMonthName }}</p>
+        </div>
+        @if (budgetLimit > 0) {
+          <div class="budget-panel__percent">
+            {{ budgetPercent | number:'1.0-0' }}%
+          </div>
+        }
+      </div>
+
+      @if (budgetLimit > 0) {
+        <div class="budget-stats">
+          <div class="budget-stat">
+            <p class="budget-stat__label">Monthly Budget Limit</p>
+            <p class="budget-stat__value">{{ budgetLimit | money }}</p>
+          </div>
+          <div class="budget-stat budget-stat--warning">
+            <p class="budget-stat__label">Spent This Month</p>
+            <p class="budget-stat__value">{{ budgetUsed | money }}</p>
+          </div>
+          <div class="budget-stat" [class.budget-stat--safe]="!budgetExceeded" [class.budget-stat--danger]="budgetExceeded">
+            <p class="budget-stat__label">{{ budgetExceeded ? 'Amount Exceeded' : 'Remaining Budget' }}</p>
+            <p class="budget-stat__value">
+              {{ (budgetExceeded ? -budgetRemaining : budgetRemaining) | money }}
+            </p>
+          </div>
+        </div>
+
+        <div class="budget-bar">
+          <div class="budget-bar__top">
+            <span class="budget-bar__amount">
+              <strong>{{ budgetUsed | money }}</strong>
+              <span class="budget-bar__divider">/</span>
+              <span class="budget-bar__total">{{ budgetLimit | money }}</span>
+            </span>
+            <span class="budget-bar__percent"
+                  [class.warning]="budgetStatus === 'warning'"
+                  [class.over]="budgetExceeded">
+              {{ budgetPercent | number:'1.0-0' }}% used
+            </span>
+          </div>
+          <div class="budget-bar__track">
+            <div class="budget-bar__fill"
+                 [style.width.%]="budgetPercent"
+                 [class.warning]="budgetStatus === 'warning'"
+                 [class.over]="budgetExceeded"></div>
+            @if (budgetLimit > 0 && !budgetExceeded) {
+              <div class="budget-bar__milestone" [style.left.%]="50">
+                <span class="budget-bar__milestone-label">50%</span>
+              </div>
+              <div class="budget-bar__milestone" [style.left.%]="80">
+                <span class="budget-bar__milestone-label">80%</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        @if (budgetStatus === 'warning') {
+          <p class="budget-panel__hint budget-panel__hint--warning">
+            ⚠ Warning: You have used more than 80% of your budget.
+          </p>
+        } @else if (budgetExceeded) {
+          <p class="budget-panel__hint budget-panel__hint--danger">
+            🚨 You have exceeded your monthly budget! Review your spending.
+          </p>
+        } @else {
+          <p class="budget-panel__hint budget-panel__hint--safe">
+            ✓ Your budget is under control.
+          </p>
+        }
+      } @else {
+        <div class="budget-empty">
+          <p>You haven't set a monthly budget limit yet.</p>
+          <a routerLink="/settings" class="btn btn--primary">Set Limit</a>
+        </div>
+      }
+    </div>
+
+    <!-- Accordions and Charts -->
+    <div class="dash-grid animate-fade-in">
+      <!-- AI Financial Future Simulator -->
+      <div class="dash-section dash-section--featured" [class.dash-section--open]="isSectionOpen('forecast')">
+        <button class="dash-section__toggle" (click)="toggleSection('forecast')">
+          <span class="dash-section__chevron" [class.expanded]="isSectionOpen('forecast')">▶</span>
+          <span class="dash-section__icon">🔮</span>
+          <span class="dash-section__title">Financial Future Simulator</span>
+          <span class="dash-section__current"
+                [class.dash-section__current--active]="forecastBudget.hasLimit">
+            @if (forecastBudget.hasLimit) {
+              Limit: {{ forecastBudget.limit | money:0 }}
+            } @else {
+              No limit set
+            }
+          </span>
+          <span class="dash-section__badge">AI</span>
+        </button>
+        @if (isSectionOpen('forecast')) {
+          <div class="dash-section__body">
+            <!-- Budget Limit Forecast -->
+            @if (forecastBudget.hasLimit) {
+              <div class="forecast-card" [class]="'forecast-card--' + forecastBudget.status">
+                <div class="forecast-card__header">
+                  <span class="forecast-card__title">📊 Budget Limit Projection</span>
+                  <span class="forecast-card__amount">{{ forecastBudget.projectedEndOfMonth | money:0 }}</span>
+                </div>
+                <div class="forecast-card__bar">
+                  <div class="forecast-card__fill"
+                       [style.width.%]="Math.min((forecastBudget.projectedEndOfMonth / forecastBudget.limit) * 100, 100)"></div>
+                </div>
+                <p class="forecast-card__message">{{ forecastBudget.message }}</p>
+                <div class="forecast-card__meta">
+                  Projected vs Limit: <strong>{{ forecastBudget.projectedEndOfMonth | money:0 }}</strong>
+                  / {{ forecastBudget.limit | money:0 }}
+                </div>
+              </div>
+            } @else {
+              <p class="dash-section__empty">
+                Set a budget limit in <strong>Settings → Monthly Budget Limit</strong> to enable AI projections.
+              </p>
+            }
+
+            <!-- Goal Forecasts -->
+            @if (forecastGoals.length > 0) {
+              <h4 class="forecast-section-title">🎯 Goal Projections</h4>
+              <div class="forecast-goals">
+                @for (f of forecastGoals; track f.goal.id) {
+                  <div class="forecast-goal" [class]="'forecast-goal--' + f.status">
+                    <div class="forecast-goal__header">
+                      <span class="forecast-goal__icon">{{ f.goal.icon }}</span>
+                      <span class="forecast-goal__name">{{ f.goal.name }}</span>
+                      @if (f.status === 'early') {
+                        <span class="forecast-goal__badge forecast-goal__badge--good">+{{ f.diffDays }} days early</span>
+                      } @else if (f.status === 'on-track') {
+                        <span class="forecast-goal__badge forecast-goal__badge--ok">On Track</span>
+                      } @else if (f.status === 'late') {
+                        <span class="forecast-goal__badge forecast-goal__badge--bad">{{ Math.abs(f.diffDays) }} days late</span>
+                      } @else if (f.status === 'unreachable') {
+                        <span class="forecast-goal__badge forecast-goal__badge--bad">Unreachable</span>
+                      } @else {
+                        <span class="forecast-goal__badge forecast-goal__badge--good">Completed</span>
+                      }
+                    </div>
+                    <p class="forecast-goal__message">{{ f.message }}</p>
+                    <div class="forecast-goal__meta">
+                      @if (f.estimatedDate && f.status !== 'completed' && f.status !== 'unreachable') {
+                        Estimated completion: <strong>{{ f.estimatedDate }}</strong> ·
+                        Deadline: <strong>{{ f.goal.deadline }}</strong> ·
+                        Remaining: <strong>{{ f.remaining | money:0 }}</strong>
+                      } @else if (f.status === 'unreachable') {
+                        Target date: <strong>{{ f.goal.deadline }}</strong> ·
+                        Remaining: <strong>{{ f.remaining | money:0 }}</strong>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+          </div>
+        }
+      </div>
+
+      <!-- This Month's Category Distribution -->
+      <div class="dash-section" [class.dash-section--open]="isSectionOpen('monthlyDonutChart')">
+        <button class="dash-section__toggle" (click)="toggleSection('monthlyDonutChart')">
+          <span class="dash-section__chevron" [class.expanded]="isSectionOpen('monthlyDonutChart')">▶</span>
+          <span class="dash-section__icon">🍩</span>
+          <span class="dash-section__title">This Month's Category Distribution</span>
+          <span class="dash-section__current"
+                [class.dash-section__current--active]="currentMonthCategoryExpenses.length > 0">
+            {{ totalCurrentMonthCategoryExpense | money }}
+          </span>
+          @if (currentMonthCategoryExpenses.length > 0) {
+            <span class="dash-section__badge">{{ currentMonthCategoryExpenses.length }} categories</span>
+          }
+        </button>
+        @if (isSectionOpen('monthlyDonutChart')) {
+          <div class="dash-section__body dash-section__chart">
+            @if (currentMonthCategoryExpenses.length) {
+              <div class="chart-layout">
+                <div class="chart-canvas-wrapper">
+                  <canvas #monthlyDonutChart></canvas>
+                </div>
+                <div class="custom-legend">
+                  @for (item of currentMonthCategoryExpensesWithPercent; track item.category) {
+                    <div class="legend-item" (click)="goToCategoryTransactions(item.category)" style="cursor: pointer;">
+                      <span class="legend-badge" [style.background]="categoryService.colorOf(item.category, 'expense')"></span>
+                      <span class="legend-icon">{{ categoryService.iconOf(item.category, 'expense') }}</span>
+                      <span class="legend-label">{{ item.category }}</span>
+                      <span class="legend-percent">{{ item.share | number:'1.0-1' }}%</span>
+                      <span class="legend-value">{{ item.total | money }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            } @else {
+              <p class="dash-section__empty">No expense records this month yet.</p>
+            }
+          </div>
+        }
+      </div>
+
+    </div>
+  }
+</div>

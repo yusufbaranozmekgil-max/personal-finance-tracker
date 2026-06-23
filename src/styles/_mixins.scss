@@ -1,0 +1,52 @@
+@use 'variables' as v;
+
+@mixin card {
+  background: v.$color-surface;
+  border-radius: v.$radius-md;
+  box-shadow: v.$shadow-card;
+  border: 1px solid v.$color-border;
+  padding: 1.5rem;
+}
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin input-base {
+  width: 100%;
+  background: v.$color-surface-2;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-sm;
+  color: v.$color-text;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+
+  &:focus {
+    border-color: v.$color-primary;
+  }
+}
+
+@mixin btn($bg, $color: #fff) {
+  background: $bg;
+  color: $color;
+  border: none;
+  border-radius: v.$radius-sm;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+
+  &:hover { opacity: 0.88; }
+  &:active { transform: scale(0.97); }
+}

@@ -1,0 +1,1555 @@
+@use '../../../styles/variables' as v;
+@use '../../../styles/mixins' as m;
+
+.page-header {
+  @include m.flex-between;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 600px) {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+.page-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.btn {
+  @include m.btn(v.$color-primary);
+  &--ghost { @include m.btn(v.$color-surface-2, v.$color-text); }
+}
+
+.form-card {
+  @include m.card;
+  margin-bottom: 1.5rem;
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1.2rem;
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+
+  @media (max-width: 500px) {
+    flex-direction: column;
+
+    .btn { width: 100%; }
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  &--full { grid-column: 1 / -1; }
+
+  label { font-size: 0.82rem; color: v.$color-text-muted; font-weight: 500; }
+
+  input, select { @include m.input-base; }
+}
+
+.type-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  background: v.$color-surface;
+  padding: 0.4rem;
+  border-radius: v.$radius-md;
+  border: 1px solid v.$color-border;
+
+  @media (max-width: 600px) { flex-direction: column; }
+}
+
+.tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: v.$color-text-muted;
+  padding: 0.7rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: v.$radius-sm;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background 0.2s, color 0.2s;
+
+  &:hover { background: v.$color-surface-2; color: v.$color-text; }
+
+  &__count {
+    background: v.$color-surface-2;
+    color: v.$color-text-muted;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.1rem 0.5rem;
+    border-radius: 10px;
+    min-width: 22px;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  &--active {
+    background: v.$color-primary;
+    color: #fff;
+
+    .tab__count { background: rgba(255,255,255,0.25); color: #fff; }
+  }
+
+  &--income.tab--active {
+    background: v.$color-income;
+    color: #fff;
+  }
+
+  &--expense.tab--active {
+    background: v.$color-expense;
+    color: #fff;
+  }
+}
+
+.category-section {
+  margin-bottom: 1rem;
+  background: v.$color-surface;
+  border-radius: v.$radius-md;
+  border: 1px solid v.$color-border;
+  padding: 1rem 1.2rem;
+
+  &__header {
+    @include m.flex-between;
+    margin-bottom: 0.75rem;
+  }
+
+  &__title {
+    font-size: 0.78rem;
+    color: v.$color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: v.$color-expense;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+
+  &:hover { background: rgba(239,68,68,0.1); }
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  @media (max-width: 500px) {
+    .chip {
+      justify-content: space-between;
+      width: 100%;
+    }
+  }
+}
+
+// Chip wrapper — yan yana ana buton + sil butonu
+.chip-wrap {
+  display: inline-flex;
+  align-items: stretch;
+  background: v.$color-surface-2;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: v.$color-border;
+  }
+
+  &--active {
+    border-color: transparent !important;
+
+    .chip-wrap__main, .chip-wrap__delete {
+      color: #fff !important;
+    }
+    .chip__count {
+      background: rgba(255, 255, 255, 0.25) !important;
+      color: #fff !important;
+    }
+  }
+
+  &__main {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: transparent;
+    border: none;
+    color: v.$color-text-muted;
+    padding: 0.5rem 0.7rem 0.5rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.2s;
+
+    &:hover { color: v.$color-text; }
+  }
+
+  &__delete {
+    background: transparent;
+    border: none;
+    border-left: 1px solid rgba(148, 163, 184, 0.2);
+    color: v.$color-text-muted;
+    padding: 0 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+    font-family: inherit;
+
+    &:hover {
+      color: #fff;
+      background: v.$color-expense;
+    }
+  }
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: v.$color-surface-2;
+  border: 1px solid transparent;
+  color: v.$color-text-muted;
+  padding: 0.5rem 0.9rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    color: v.$color-text;
+    border-color: v.$color-border;
+  }
+
+  &__count {
+    background: v.$color-bg;
+    color: v.$color-text-muted;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.05rem 0.45rem;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+  }
+
+  &--active {
+    background: v.$color-primary;
+    color: #fff;
+    border-color: v.$color-primary;
+
+    .chip__count { background: rgba(255,255,255,0.25); color: #fff; }
+  }
+
+  &--income.chip--active {
+    background: v.$color-income;
+    border-color: v.$color-income;
+  }
+
+  &--expense.chip--active {
+    background: v.$color-expense;
+    border-color: v.$color-expense;
+  }
+}
+
+.date-section {
+  background: v.$color-surface;
+  border-radius: v.$radius-md;
+  border: 1px solid v.$color-border;
+  margin-bottom: 1.2rem;
+  overflow: hidden;
+  transition: border-color 0.2s;
+
+  &:hover { border-color: rgba(99, 102, 241, 0.3); }
+
+  &__toggle {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.95rem 1.2rem;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+
+    &:hover { background: v.$color-surface-2; }
+
+    @media (max-width: 600px) {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+  }
+
+  &__chevron {
+    color: v.$color-text-muted;
+    font-size: 0.7rem;
+    transition: transform 0.2s;
+    width: 12px;
+    flex-shrink: 0;
+
+    &.expanded { transform: rotate(90deg); color: v.$color-primary; }
+  }
+
+  &__icon { font-size: 1.1rem; flex-shrink: 0; }
+
+  &__title {
+    font-size: 0.95rem;
+    color: v.$color-text;
+    font-weight: 700;
+    flex: 1;
+  }
+
+  &__current {
+    font-size: 0.82rem;
+    color: v.$color-text-muted;
+    font-weight: 600;
+    padding: 0.25rem 0.7rem;
+    background: v.$color-surface-2;
+    border-radius: 12px;
+
+    &--active {
+      color: v.$color-primary;
+      background: rgba(99, 102, 241, 0.15);
+    }
+  }
+
+  &__badge {
+    background: v.$color-primary;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  &__body {
+    padding: 0 1.2rem 1.2rem;
+    border-top: 1px solid v.$color-border;
+    animation: slideDown 0.2s ease;
+  }
+
+  &__top-row {
+    @include m.flex-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.85rem 0 0.85rem;
+  }
+
+  &__hint {
+    font-size: 0.78rem;
+    color: v.$color-text-muted;
+    font-style: italic;
+  }
+
+  &--open { border-color: rgba(99, 102, 241, 0.4); }
+}
+
+.btn--sm { padding: 0.35rem 0.8rem; font-size: 0.78rem; }
+
+.date-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.preset {
+  background: v.$color-surface-2;
+  border: 1px solid transparent;
+  color: v.$color-text-muted;
+  padding: 0.55rem 1rem;
+  border-radius: v.$radius-sm;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover { color: v.$color-text; border-color: v.$color-border; }
+
+  &--active {
+    background: v.$color-primary;
+    color: #fff;
+    border-color: v.$color-primary;
+  }
+}
+
+.date-custom {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed v.$color-border;
+
+  @media (max-width: 500px) {
+    flex-direction: column;
+    align-items: stretch;
+
+    .date-separator { display: none; }
+  }
+}
+
+.date-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  label { font-size: 0.78rem; color: v.$color-text-muted; font-weight: 500; }
+  input { @include m.input-base; }
+}
+
+.date-separator {
+  color: v.$color-text-muted;
+  font-size: 1.2rem;
+  padding-bottom: 0.7rem;
+}
+
+.date-info {
+  margin-top: 0.85rem;
+  font-size: 0.8rem;
+  color: v.$color-primary;
+  background: rgba(99, 102, 241, 0.1);
+  padding: 0.5rem 0.9rem;
+  border-radius: v.$radius-sm;
+  font-weight: 500;
+}
+
+.category-summary-card {
+  @include m.card;
+  margin-bottom: 1.2rem;
+
+  &__header {
+    margin-bottom: 1rem;
+
+    h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    p {
+      font-size: 0.85rem;
+      color: v.$color-text-muted;
+    }
+  }
+
+  &__empty {
+    color: v.$color-text-muted;
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 1rem 0;
+  }
+}
+
+.category-summary-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+
+  @media (max-width: 700px) { grid-template-columns: 1fr; }
+}
+
+.category-summary-row {
+  background: v.$color-surface-2;
+  border-radius: v.$radius-sm;
+  padding: 0.75rem 0.85rem;
+
+  &__top {
+    @include m.flex-between;
+    gap: 0.75rem;
+    margin-bottom: 0.55rem;
+  }
+
+  &__category {
+    font-size: 0.9rem;
+    font-weight: 700;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__amount {
+    color: v.$color-expense;
+    font-size: 0.9rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  &__bar {
+    height: 8px;
+    background: v.$color-bg;
+    border-radius: 999px;
+    overflow: hidden;
+
+    span {
+      display: block;
+      height: 100%;
+      min-width: 8px;
+      background: v.$color-expense;
+      border-radius: inherit;
+    }
+  }
+
+  &--income {
+    .category-summary-row__amount { color: v.$color-income; }
+    .category-summary-row__bar span { background: v.$color-income; }
+  }
+}
+
+// Aylık Tekrar Checkbox
+.recurring-field {
+  margin-top: 0.4rem;
+}
+
+.recurring-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.85rem 1rem;
+  background: v.$color-surface-2;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-sm;
+  transition: border-color 0.2s, background 0.2s;
+  user-select: none;
+
+  &:hover { border-color: v.$color-primary; background: rgba(99, 102, 241, 0.05); }
+
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid v.$color-border;
+    border-radius: 4px;
+    background: v.$color-bg;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    margin-top: 2px;
+    transition: all 0.2s;
+
+    &:checked {
+      background: v.$color-primary;
+      border-color: v.$color-primary;
+
+      &::after {
+        content: '✓';
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff;
+        font-size: 0.85rem;
+        font-weight: 800;
+      }
+    }
+  }
+
+  &__box { display: none; }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: v.$color-text;
+  }
+
+  &__hint {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: v.$color-text-muted;
+    font-style: italic;
+    line-height: 1.45;
+  }
+}
+
+// 🔄 Rozet (listede ve akordeon içinde)
+.tx-item__recurring,
+.tx-sub-item__recurring {
+  background: rgba(99, 102, 241, 0.15);
+  color: v.$color-primary;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.summary-type-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.85rem 0;
+  padding: 0.4rem;
+  background: v.$color-surface-2;
+  border-radius: v.$radius-sm;
+  width: fit-content;
+
+  &__label {
+    font-size: 0.78rem;
+    color: v.$color-text-muted;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 0 0.6rem;
+  }
+}
+
+.filters {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+
+  select, input { @include m.input-base; width: auto; flex: 1; min-width: 120px; }
+}
+
+.empty-state {
+  @include m.card;
+  text-align: center;
+  padding: 3rem 1.5rem;
+
+  &__icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.7; }
+
+  &__title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: v.$color-text;
+    margin-bottom: 0.4rem;
+  }
+
+  &__hint {
+    font-size: 0.9rem;
+    color: v.$color-text-muted;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+}
+
+.list-toolbar {
+  @include m.flex-between;
+  margin-bottom: 1rem;
+  padding: 0.6rem 0;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+
+  &__count {
+    font-size: 0.9rem;
+    color: v.$color-text-muted;
+
+    strong { color: v.$color-text; font-weight: 700; }
+  }
+
+  &__range {
+    margin-left: 0.35rem;
+    font-size: 0.82rem;
+    color: v.$color-text-muted;
+  }
+
+  &__controls {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 600px) {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+// Görünüm Geçişi
+.view-toggle {
+  display: inline-flex;
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-sm;
+  padding: 0.2rem;
+
+  &__btn {
+    background: transparent;
+    border: none;
+    color: v.$color-text-muted;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.2s, color 0.2s;
+
+    &:hover { color: v.$color-text; }
+
+    &--active {
+      background: v.$color-primary;
+      color: #fff;
+    }
+  }
+}
+
+// Akordeonu Aç/Kapat Çubuğu
+.group-toolbar {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+// Özel Kategori Form
+.category-section__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+// Profesyonel Kategori Formu
+.cat-form {
+  margin: 0.75rem 0 0.5rem;
+  padding: 1.2rem;
+  background: v.$color-surface-2;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-md;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+
+  &__top {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    @media (max-width: 700px) {
+      flex-wrap: wrap;
+    }
+  }
+
+  &__preview {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.95rem;
+    border: 2px solid;
+    border-radius: 22px;
+    min-width: 160px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  &__preview-icon { font-size: 1.05rem; }
+
+  &__preview-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__input {
+    @include m.input-base;
+    flex: 1;
+    background: v.$color-bg;
+    font-weight: 500;
+  }
+
+  &__row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+
+    &--icons { flex-direction: column; align-items: stretch; gap: 0.6rem; }
+
+    @media (max-width: 700px) {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  &__label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: v.$color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    min-width: 50px;
+    padding-top: 0.45rem;
+  }
+
+  &__colors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    flex: 1;
+  }
+}
+
+.cat-color {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid v.$color-bg;
+  outline: 1px solid v.$color-border;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s, outline-color 0.15s, outline-width 0.15s;
+
+  &:hover {
+    transform: scale(1.12);
+    outline-color: v.$color-text-muted;
+  }
+
+  &--active {
+    transform: scale(1.15);
+    outline: 2px solid v.$color-text;
+    outline-offset: 1px;
+  }
+}
+
+.cat-icons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  background: v.$color-bg;
+  border-radius: v.$radius-sm;
+  padding: 0.85rem;
+  max-height: 240px;
+  overflow-y: auto;
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  &__group-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: v.$color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+}
+
+.cat-icon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: v.$color-surface;
+  border: 2px solid v.$color-border;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.15s, background 0.15s;
+  padding: 0;
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: v.$color-text-muted;
+    background: v.$color-surface-2;
+  }
+
+  &--active {
+    background: v.$color-surface-2;
+    border-width: 2px;
+  }
+}
+
+.chip__icon {
+  font-size: 1.05rem;
+  margin-right: 0.15rem;
+}
+
+// Akordeon Kategori Liste
+.tx-category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tx-category {
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-md;
+  border-left: 4px solid v.$color-expense;
+  overflow: hidden;
+  transition: border-color 0.2s;
+
+  &:hover { border-color: rgba(99, 102, 241, 0.3); border-left-color: v.$color-expense; }
+  &--income {
+    border-left-color: v.$color-income;
+    &:hover { border-left-color: v.$color-income; }
+  }
+  &--transfer {
+    border-left-color: v.$color-primary;
+    &:hover { border-left-color: v.$color-primary; }
+  }
+
+  &__header {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1rem 1.2rem;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition: background 0.15s;
+
+    &:hover { background: v.$color-surface-2; }
+
+    @media (max-width: 600px) {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+  }
+
+  &__chevron {
+    color: v.$color-text-muted;
+    font-size: 0.7rem;
+    transition: transform 0.2s;
+    width: 12px;
+    flex-shrink: 0;
+
+    &.expanded { transform: rotate(90deg); color: v.$color-primary; }
+  }
+
+  &__icon { font-size: 1.4rem; flex-shrink: 0; }
+
+  &__name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: v.$color-text;
+    flex: 1;
+  }
+
+  &__type-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 10px;
+    background: rgba(239, 68, 68, 0.15);
+    color: v.$color-expense;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+
+    &--income {
+      background: rgba(34, 197, 94, 0.15);
+      color: v.$color-income;
+    }
+    &--transfer {
+      background: rgba(99, 102, 241, 0.15);
+      color: v.$color-primary;
+    }
+  }
+
+  &__count {
+    font-size: 0.78rem;
+    color: v.$color-text-muted;
+    font-weight: 600;
+    background: v.$color-surface-2;
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+  }
+
+  &__total {
+    font-weight: 700;
+    font-size: 1rem;
+
+    &.profit-positive { color: v.$color-income; }
+    &.profit-negative { color: v.$color-expense; }
+    &.profit-neutral { color: v.$color-primary; }
+  }
+
+  &__body {
+    padding: 0.5rem 1rem 1rem;
+    border-top: 1px solid v.$color-border;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    animation: slideDown 0.2s ease;
+  }
+}
+
+// Alt satır (akordeon içi işlem)
+.tx-sub-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.7rem 0.85rem;
+  background: v.$color-surface-2;
+  border-radius: v.$radius-sm;
+  transition: transform 0.15s;
+
+  &:hover { transform: translateX(2px); }
+
+  &__main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__date {
+    font-size: 0.78rem;
+    color: v.$color-text-muted;
+    font-weight: 600;
+    background: v.$color-bg;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+  }
+
+  &__desc {
+    font-size: 0.88rem;
+    color: v.$color-text;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__method {
+    background: v.$color-bg;
+    color: v.$color-text-muted;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  &__account {
+    background: rgba(59, 130, 246, 0.15);
+    color: v.$color-asset;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.15rem 0.55rem;
+    border-radius: 4px;
+  }
+
+  &__amount {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: v.$color-expense;
+
+    .tx-sub-item--income & { color: v.$color-income; }
+    .tx-sub-item--transfer & { color: v.$color-primary; }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.2rem;
+    flex-shrink: 0;
+  }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// Akordeon Alt Sayfalama
+.sub-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed v.$color-border;
+  flex-wrap: wrap;
+
+  &__info {
+    font-size: 0.78rem;
+    color: v.$color-text-muted;
+    font-weight: 600;
+  }
+
+  &__controls {
+    display: flex;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+  }
+
+  &__btn {
+    background: v.$color-surface-2;
+    border: 1px solid v.$color-border;
+    color: v.$color-text-muted;
+    padding: 0.35rem 0.7rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+
+    &:hover:not(:disabled) { background: v.$color-primary; color: #fff; border-color: v.$color-primary; }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+
+  &__page {
+    background: v.$color-surface-2;
+    border: 1px solid v.$color-border;
+    color: v.$color-text-muted;
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover { color: v.$color-text; border-color: v.$color-primary; }
+
+    &.active {
+      background: v.$color-primary;
+      color: #fff;
+      border-color: v.$color-primary;
+    }
+  }
+}
+
+.sort-control {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  label {
+    font-size: 0.82rem;
+    color: v.$color-text-muted;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  select {
+    @include m.input-base;
+    width: auto;
+    min-width: 200px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  @media (max-width: 600px) {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    select {
+      min-width: 0;
+      width: 100%;
+    }
+  }
+}
+
+// Tablo Başlığı
+.tx-header {
+  display: grid;
+  grid-template-columns: 1.1fr 1.5fr 1.2fr 1fr 1.6fr 80px;
+  gap: 1rem;
+  padding: 0.7rem 1.2rem;
+  font-size: 0.72rem;
+  color: v.$color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  border-bottom: 1px solid v.$color-border;
+  margin-bottom: 0.5rem;
+
+  @media (max-width: 800px) { display: none; }
+}
+
+.tx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid v.$color-border;
+
+  &__pages {
+    display: flex;
+    gap: 0.4rem;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 0.15rem;
+  }
+
+  &__btn,
+  &__page {
+    border: 1px solid v.$color-border;
+    background: v.$color-surface;
+    color: v.$color-text-muted;
+    border-radius: v.$radius-sm;
+    min-height: 38px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+
+    &:hover:not(:disabled) {
+      background: v.$color-surface-2;
+      color: v.$color-text;
+      border-color: v.$color-primary;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+  }
+
+  &__btn {
+    padding: 0.45rem 0.9rem;
+    white-space: nowrap;
+  }
+
+  &__page {
+    width: 38px;
+    flex: 0 0 38px;
+
+    &--active {
+      background: v.$color-primary;
+      border-color: v.$color-primary;
+      color: #fff;
+    }
+  }
+
+  @media (max-width: 600px) {
+    align-items: stretch;
+    flex-direction: column;
+
+    &__pages {
+      justify-content: flex-start;
+      order: -1;
+    }
+  }
+}
+
+.tx-item {
+  display: grid;
+  grid-template-columns: 1.1fr 1.5fr 1.2fr 1fr 1.6fr 80px;
+  gap: 1rem;
+  align-items: center;
+  background: v.$color-surface;
+  border-radius: v.$radius-sm;
+  padding: 1rem 1.2rem;
+  border-left: 4px solid v.$color-border;
+  transition: transform 0.15s;
+
+  &:hover { transform: translateX(2px); }
+
+  &--income { border-left-color: v.$color-income; }
+  &--expense { border-left-color: v.$color-expense; }
+  &--transfer { border-left-color: v.$color-primary; }
+
+  &__type {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  &__icon {
+    font-size: 0.9rem;
+    width: 1.7rem;
+    height: 1.7rem;
+    @include m.flex-center;
+    border-radius: 50%;
+    background: v.$color-surface-2;
+    font-weight: 700;
+    flex-shrink: 0;
+
+    .tx-item--income & { color: v.$color-income; }
+    .tx-item--expense & { color: v.$color-expense; }
+    .tx-item--transfer & { color: v.$color-primary; }
+  }
+
+  &__type-text {
+    font-weight: 600;
+    font-size: 0.88rem;
+
+    .tx-item--income & { color: v.$color-income; }
+    .tx-item--expense & { color: v.$color-expense; }
+    .tx-item--transfer & { color: v.$color-primary; }
+  }
+
+  &__category {
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__method {
+    background: v.$color-surface-2;
+    color: v.$color-text-muted;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  &__amount {
+    font-weight: 700;
+    font-size: 1rem;
+
+    .tx-item--income & { color: v.$color-income; }
+    .tx-item--expense & { color: v.$color-expense; }
+    .tx-item--transfer & { color: v.$color-primary; }
+  }
+
+  &__date {
+    font-size: 0.88rem;
+    color: v.$color-text-muted;
+  }
+
+  &__desc {
+    font-size: 0.88rem;
+    color: v.$color-text-muted;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // Mobil: kart görünümü
+  @media (max-width: 800px) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    position: relative;
+
+    &__amount { font-size: 1.1rem; }
+    &__date::before { content: '📅 '; }
+    &__desc::before { content: '📝 '; }
+
+    .tx-item__actions {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+    }
+  }
+
+  @media (max-width: 500px) {
+    padding: 0.9rem 0.9rem 0.9rem 1rem;
+
+    &__type,
+    &__category,
+    &__amount,
+    &__date,
+    &__desc {
+      max-width: calc(100% - 4.5rem);
+    }
+
+    &__category,
+    &__desc {
+      overflow-wrap: anywhere;
+      white-space: normal;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.3rem;
+    justify-content: flex-end;
+  }
+}
+
+.btn-edit {
+  background: none;
+  border: none;
+  color: v.$color-text-muted;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  transition: color 0.2s, background 0.2s;
+
+  &:hover { color: v.$color-primary; background: rgba(99,102,241,0.1); }
+}
+
+.btn-delete {
+  background: none;
+  border: none;
+  color: v.$color-text-muted;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  transition: color 0.2s, background 0.2s;
+
+  &:hover { color: v.$color-expense; background: rgba(239,68,68,0.1); }
+}
+
+.search-filter-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  min-width: 250px;
+  display: flex;
+  align-items: center;
+
+  &__icon {
+    position: absolute;
+    left: 0.85rem;
+    font-size: 0.95rem;
+    color: v.$color-text-muted;
+    pointer-events: none;
+  }
+
+  &__input {
+    @include m.input-base;
+    padding-left: 2.2rem;
+    padding-right: 2.2rem;
+    width: 100%;
+  }
+
+  &__clear {
+    position: absolute;
+    right: 0.85rem;
+    background: transparent;
+    border: none;
+    color: v.$color-text-muted;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0.2rem;
+    border-radius: 50%;
+    transition: color 0.15s, background 0.15s;
+
+    &:hover {
+      color: v.$color-text;
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+.active-filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 0.45rem 0.85rem;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  color: v.$color-text;
+  animation: slideIn 0.2s ease;
+
+  &__label {
+    color: v.$color-text-muted;
+  }
+
+  &__value {
+    color: v.$color-primary;
+    font-weight: 700;
+  }
+
+  &__clear {
+    background: transparent;
+    border: none;
+    color: v.$color-text-muted;
+    font-size: 0.82rem;
+    cursor: pointer;
+    padding: 0.15rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s, background 0.15s;
+
+    &:hover {
+      color: v.$color-expense;
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+

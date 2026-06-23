@@ -1,0 +1,220 @@
+<div class="goals">
+  <div class="page-header">
+    <div class="page-title-block">
+      <h1 class="page-title">Financial Goals</h1>
+      <span class="goal-slots" [class.goal-slots--full]="goalService.goals().length >= maxGoalCount">
+        {{ goalService.goals().length }} / {{ maxGoalCount }}
+      </span>
+    </div>
+    <button class="btn btn--primary"
+            (click)="toggleForm()"
+            [disabled]="!showForm() && !editingId() && goalService.goals().length >= maxGoalCount">
+      {{ showForm() ? '✕ Cancel' : '+ New Goal' }}
+    </button>
+  </div>
+
+  <!-- Summary -->
+  @if (goalService.goals().length > 0) {
+    <div class="summary-grid">
+      <div class="summary-card summary-card--primary">
+        <p class="summary-card__label">Active Goals</p>
+        <p class="summary-card__value">{{ goalService.goals().length }}</p>
+      </div>
+      <div class="summary-card summary-card--income">
+        <p class="summary-card__label">Total Savings</p>
+        <p class="summary-card__value">{{ goalService.totalSaved() | money }}</p>
+      </div>
+      <div class="summary-card summary-card--asset">
+        <p class="summary-card__label">Total Target</p>
+        <p class="summary-card__value">{{ goalService.totalTarget() | money }}</p>
+      </div>
+      <div class="summary-card summary-card--success">
+        <p class="summary-card__label">Completed</p>
+        <p class="summary-card__value">{{ goalService.completedCount() }}</p>
+      </div>
+    </div>
+
+    <!-- Status Tabs -->
+    <div class="status-tabs">
+      <button class="status-tab"
+              [class.status-tab--active]="filterStatus() === 'all'"
+              (click)="setFilterStatus('all')">
+        All <span class="status-tab__count">{{ goalService.goals().length }}</span>
+      </button>
+      <button class="status-tab status-tab--active-color"
+              [class.status-tab--active]="filterStatus() === 'active'"
+              (click)="setFilterStatus('active')">
+        🎯 Active <span class="status-tab__count">{{ activeCount }}</span>
+      </button>
+      <button class="status-tab status-tab--complete-color"
+              [class.status-tab--active]="filterStatus() === 'complete'"
+              (click)="setFilterStatus('complete')">
+        ✓ Completed <span class="status-tab__count">{{ completeCount }}</span>
+      </button>
+      <button class="status-tab status-tab--overdue-color"
+              [class.status-tab--active]="filterStatus() === 'overdue'"
+              (click)="setFilterStatus('overdue')">
+        ⚠ Overdue <span class="status-tab__count">{{ overdueCount }}</span>
+      </button>
+    </div>
+  }
+
+  <!-- Form -->
+  @if (showForm()) {
+    <div class="form-card">
+      <h3>{{ editingId() ? 'Edit Goal' : 'Create New Goal' }}</h3>
+
+      @if (!editingId()) {
+        <div class="presets-section">
+          <span class="presets-label">Quick Select:</span>
+          <div class="presets">
+            @for (p of presets; track p.name) {
+              <button class="preset-chip" (click)="applyPreset(p)">
+                <span class="preset-chip__icon">{{ p.icon }}</span>
+                <span>{{ p.name }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="form-grid">
+        <div class="field field--full">
+          <label>Goal Name *</label>
+          <input type="text" [(ngModel)]="form.name" [maxlength]="maxNameLength" placeholder="Erasmus Budget, Laptop...">
+        </div>
+        <div class="field">
+          <label>Icon (Emoji)</label>
+          <input type="text" [(ngModel)]="form.icon" placeholder="🎯" maxlength="2">
+        </div>
+        <div class="field">
+          <label>Deadline *</label>
+          <input type="date" [(ngModel)]="form.deadline" [min]="minDate">
+        </div>
+        <div class="field">
+          <label>Target Amount *</label>
+          <input type="number" [(ngModel)]="form.targetAmount" min="0.01" [max]="maxMoneyAmount" step="any" placeholder="50000">
+        </div>
+        <div class="field">
+          <label>Current Savings</label>
+          <input type="number" [(ngModel)]="form.currentAmount" min="0" [max]="maxMoneyAmount" step="any" placeholder="0">
+        </div>
+        <div class="field field--full">
+          <label>Description</label>
+          <input type="text" [(ngModel)]="form.description" [maxlength]="maxDescriptionLength" placeholder="A short note about this goal...">
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn--primary" (click)="submit()">
+          {{ editingId() ? 'Update' : 'Create' }}
+        </button>
+        <button class="btn btn--ghost" (click)="cancel()">Cancel</button>
+      </div>
+    </div>
+  }
+
+  <!-- Goal List -->
+  @if (sortedGoals.length === 0) {
+    <div class="empty-state">
+      <p class="empty-state__icon">🎯</p>
+      @if (goalService.goals().length === 0) {
+        <p class="empty-state__title">No financial goals created yet.</p>
+        <p class="empty-state__hint">Start your savings journey by setting goals like a laptop, Erasmus, vacation, or emergency fund.</p>
+        <button class="btn btn--primary" (click)="toggleForm()">+ Create First Goal</button>
+      } @else {
+        <p class="empty-state__title">No goals in this status.</p>
+        <p class="empty-state__hint">Select a different status to view your other goals.</p>
+        <button class="btn btn--ghost" (click)="setFilterStatus('all')">Show All</button>
+      }
+    </div>
+  } @else {
+    <div class="goals-list">
+      @for (goal of sortedGoals; track goal.id) {
+        <div class="goal-card"
+             [class.goal-card--complete]="isComplete(goal)"
+             [class.goal-card--overdue]="isOverdue(goal)">
+          <div class="goal-card__header">
+            <div class="goal-card__title-block">
+              <span class="goal-card__icon">{{ goal.icon }}</span>
+              <div>
+                <h3 class="goal-card__name">{{ goal.name }}</h3>
+                @if (goal.description) {
+                  <p class="goal-card__desc">{{ goal.description }}</p>
+                }
+              </div>
+            </div>
+            @if (isComplete(goal)) {
+              <span class="badge badge--success">✓ Completed</span>
+            } @else if (isOverdue(goal)) {
+              <span class="badge badge--danger">⚠ Overdue</span>
+            } @else {
+              <span class="badge badge--info">{{ goalService.daysRemaining(goal) }} days left</span>
+            }
+          </div>
+
+          <!-- Progress -->
+          <div class="progress">
+            <div class="progress__amounts">
+              <span class="progress__current">{{ goal.currentAmount | money }}</span>
+              <span class="progress__sep">/</span>
+              <span class="progress__target">{{ goal.targetAmount | money }}</span>
+              <span class="progress__percent"
+                    [class.progress__percent--complete]="isComplete(goal)">
+                %{{ goalService.progress(goal) | number:'1.0-0' }}
+              </span>
+            </div>
+            <div class="progress__bar">
+              <div class="progress__fill"
+                   [style.width.%]="goalService.progress(goal)"
+                   [class.complete]="isComplete(goal)"></div>
+            </div>
+            @if (!isComplete(goal)) {
+              <p class="progress__remaining">
+                Remaining: <strong>{{ remainingAmount(goal) | money }}</strong>
+                · Deadline: <strong>{{ goal.deadline }}</strong>
+              </p>
+              @if (monthlyTarget(goal) !== null) {
+                <p class="progress__monthly-target" style="margin-top: 0.35rem; font-size: 0.82rem; color: #8b5cf6; font-weight: 600;">
+                  🎯 Monthly savings needed to reach the goal: <strong>{{ monthlyTarget(goal) | money }} / mo</strong> (time remaining: {{ getRemainingMonthsLabel(goal) }})
+                </p>
+              }
+            } @else {
+              <p class="progress__remaining progress__remaining--success">
+                🎉 You've reached your goal!
+              </p>
+            }
+          </div>
+
+          <!-- Quick Add Savings -->
+          @if (quickAddId() === goal.id) {
+            <div class="quick-add">
+              <label>💰 Add Savings</label>
+              <div class="quick-add__row">
+                <input type="number"
+                       [ngModel]="quickAddValue()"
+                       (ngModelChange)="quickAddValue.set($event)"
+                       min="0.01"
+                       [max]="maxMoneyAmount"
+                       step="any"
+                       placeholder="How much would you like to add?">
+                <button class="btn btn--sm btn--primary" (click)="saveQuickAdd(goal)">✓</button>
+                <button class="btn btn--sm btn--ghost" (click)="cancelQuickAdd()">✕</button>
+              </div>
+            </div>
+          }
+
+          <div class="goal-card__actions">
+            @if (!isComplete(goal)) {
+              <button class="btn btn--sm btn--secondary" (click)="openQuickAdd(goal)">
+                💰 Add Savings
+              </button>
+            }
+            <button class="btn btn--sm" (click)="startEdit(goal)">Edit</button>
+            <button class="btn btn--sm btn--danger" (click)="remove(goal)">Delete</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

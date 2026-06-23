@@ -1,0 +1,64 @@
+@use '../../../../styles/variables' as v;
+
+.toast-container {
+  position: fixed;
+  top: 80px;
+  right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-sm;
+  padding: 0.9rem 1.2rem;
+  min-width: 260px;
+  max-width: 380px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  pointer-events: auto;
+  animation: slideIn 0.25s ease;
+
+  &__icon {
+    font-size: 1.1rem;
+    font-weight: 700;
+    width: 1.6rem;
+    height: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &__msg { font-size: 0.92rem; font-weight: 500; flex: 1; }
+
+  &--success {
+    border-left: 4px solid v.$color-income;
+    .toast__icon { background: rgba(34,197,94,0.2); color: v.$color-income; }
+  }
+  &--error {
+    border-left: 4px solid v.$color-expense;
+    .toast__icon { background: rgba(239,68,68,0.2); color: v.$color-expense; }
+  }
+  &--warning {
+    border-left: 4px solid v.$color-warning;
+    .toast__icon { background: rgba(245,158,11,0.2); color: v.$color-warning; }
+  }
+  &--info {
+    border-left: 4px solid v.$color-asset;
+    .toast__icon { background: rgba(59,130,246,0.2); color: v.$color-asset; }
+  }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(110%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}

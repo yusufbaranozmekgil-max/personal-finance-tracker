@@ -1,0 +1,31 @@
+@if (show) {
+  <div class="banner" [class]="'banner--' + budget.status()">
+    <span class="banner__icon">
+      @switch (budget.status()) {
+        @case ('over') { 🚨 }
+        @case ('critical') { ⚠️ }
+        @case ('warning') { ⚠ }
+      }
+    </span>
+
+    <div class="banner__text">
+      @switch (budget.status()) {
+        @case ('over') {
+          <strong>You have exceeded your monthly budget limit!</strong>
+          <span>{{ budget.used() | money }} / {{ budget.limit() | money }} — {{ budget.percent() | number:'1.0-0' }}% used</span>
+        }
+        @case ('critical') {
+          <strong>You have used {{ budget.percent() | number:'1.0-0' }}% of your budget!</strong>
+          <span>Only {{ (budget.limit() - budget.used()) | money }} remaining this month.</span>
+        }
+        @case ('warning') {
+          <strong>You have used {{ budget.percent() | number:'1.0-0' }}% of your budget.</strong>
+          <span>Continuing with a remaining budget of {{ (budget.limit() - budget.used()) | money }}.</span>
+        }
+      }
+    </div>
+
+    <a routerLink="/dashboard" class="banner__link">Details</a>
+    <button class="banner__close" (click)="dismiss()" title="Dismiss">✕</button>
+  </div>
+}

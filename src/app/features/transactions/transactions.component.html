@@ -1,0 +1,635 @@
+<div class="transactions">
+  <div class="page-header">
+    <h1 class="page-title">Transactions</h1>
+    <button class="btn btn--primary" (click)="toggleForm()">
+      {{ showForm() ? '✕ Cancel' : '+ New Transaction' }}
+    </button>
+  </div>
+
+  <!-- Form -->
+  @if (showForm()) {
+    <div class="form-card">
+      <h3>{{ editingId() ? 'Edit Transaction' : 'Add New Transaction' }}</h3>
+      <div class="form-grid">
+        <div class="field">
+          <label>Type</label>
+          <select [(ngModel)]="form.type" (ngModelChange)="onTypeChange()">
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+            <option value="transfer">Inter-Account Transfer</option>
+          </select>
+        </div>
+        @if (form.type !== 'transfer') {
+          <div class="field">
+            <label>Category</label>
+            <select [(ngModel)]="form.category">
+              <option value="">Select</option>
+              @for (cat of categories; track cat) {
+                <option [value]="cat">{{ cat }}</option>
+              }
+            </select>
+          </div>
+        }
+        <div class="field">
+          <label>Amount</label>
+          <input type="number" [(ngModel)]="form.amount" min="0.01" [max]="maxMoneyAmount" step="0.01" placeholder="0.00">
+        </div>
+        <div class="field">
+          <label>Date</label>
+          <input type="date" [(ngModel)]="form.date">
+        </div>
+        @if (form.type !== 'transfer') {
+          <div class="field">
+            <label>Payment Method</label>
+            <select [(ngModel)]="form.paymentMethod">
+              <option value="">Select</option>
+              @for (method of paymentMethods; track method) {
+                <option [value]="method">{{ method }}</option>
+              }
+            </select>
+          </div>
+        }
+        <div class="field">
+          <label>{{ form.type === 'transfer' ? 'Source Account *' : '🏦 Account *' }}</label>
+          <select [(ngModel)]="form.accountId">
+            @for (acc of accountService.accounts(); track acc.id) {
+              <option [value]="acc.id">
+                {{ accountService.iconFor(acc.type) }} {{ acc.name }}
+              </option>
+            }
+          </select>
+        </div>
+        @if (form.type === 'transfer') {
+          <div class="field">
+            <label>Target Account *</label>
+            <select [(ngModel)]="form.transferAccountId">
+              <option value="">Select</option>
+              @for (acc of accountService.accounts(); track acc.id) {
+                @if (acc.id !== form.accountId) {
+                  <option [value]="acc.id">
+                    {{ accountService.iconFor(acc.type) }} {{ acc.name }}
+                  </option>
+                }
+              }
+            </select>
+          </div>
+        }
+        <div class="field field--full">
+          <label>Description</label>
+          <input type="text" [(ngModel)]="form.description" [maxlength]="maxDescriptionLength" placeholder="Optional...">
+        </div>
+        <div class="field field--full recurring-field">
+          <label class="recurring-checkbox">
+            <input type="checkbox" [(ngModel)]="form.isRecurring">
+            <span class="recurring-checkbox__box"></span>
+            <span class="recurring-checkbox__text">
+              🔄 Monthly Recurring Transaction
+              <span class="recurring-checkbox__hint">
+                Check this for transactions that repeat every month like rent, salary, or bills. They will be automatically recreated each month.
+              </span>
+            </span>
+          </label>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn--primary" (click)="submit()">
+          {{ editingId() ? 'Update' : 'Save' }}
+        </button>
+        <button class="btn btn--ghost" (click)="cancel()">Cancel</button>
+      </div>
+    </div>
+  }
+
+  <!-- Type Filter (Tabs) -->
+  <div class="type-tabs">
+    <button class="tab"
+            [class.tab--active]="filterType() === 'all'"
+            (click)="setFilterType('all')">
+      All
+      <span class="tab__count">{{ txService.transactions().length }}</span>
+    </button>
+    <button class="tab tab--income"
+            [class.tab--active]="filterType() === 'income'"
+            (click)="setFilterType('income')">
+      ↑ Income
+      <span class="tab__count">{{ incomeCount }}</span>
+    </button>
+    <button class="tab tab--expense"
+            [class.tab--active]="filterType() === 'expense'"
+            (click)="setFilterType('expense')">
+      ↓ Expenses
+      <span class="tab__count">{{ expenseCount }}</span>
+    </button>
+    <button class="tab tab--transfer"
+            [class.tab--active]="filterType() === 'transfer'"
+            (click)="setFilterType('transfer')">
+      ⇆ Transfers
+      <span class="tab__count">{{ transferCount }}</span>
+    </button>
+  </div>
+
+  <!-- Category Management (Accordion) -->
+  <div class="date-section" [class.date-section--open]="showCategoryFilter()">
+    <button class="date-section__toggle" (click)="toggleCategoryFilter()">
+      <span class="date-section__chevron" [class.expanded]="showCategoryFilter()">▶</span>
+      <span class="date-section__icon">🏷️</span>
+      <span class="date-section__title">Categories</span>
+      <span class="date-section__current"
+            [class.date-section__current--active]="hasActiveCategoryFilter">
+        {{ categoryFilterLabel }}
+      </span>
+      @if (hasActiveCategoryFilter) {
+        <span class="date-section__badge">Active</span>
+      }
+    </button>
+
+    @if (showCategoryFilter()) {
+      <div class="date-section__body">
+        <div class="date-section__top-row">
+          <span class="date-section__hint">Click a category to filter or add a new category.</span>
+          <div class="category-section__actions">
+            @if (filterCategory()) {
+              <button class="link-btn" (click)="clearCategoryFilter()">✕ Remove Filter</button>
+            }
+            @if (filterType() !== 'expense') {
+              <button class="btn btn--sm btn--ghost" (click)="openCategoryAddForm('income')">+ Income Category</button>
+            }
+            @if (filterType() !== 'income') {
+              <button class="btn btn--sm btn--ghost" (click)="openCategoryAddForm('expense')">+ Expense Category</button>
+            }
+          </div>
+        </div>
+
+        @if (showCategoryAddForm()) {
+          <div class="cat-form">
+            <!-- Top: preview + name + buttons -->
+            <div class="cat-form__top">
+              <div class="cat-form__preview"
+                   [style.background]="newCategoryColor() + '20'"
+                   [style.borderColor]="newCategoryColor()">
+                <span class="cat-form__preview-icon">{{ newCategoryIcon() }}</span>
+                <span class="cat-form__preview-name" [style.color]="newCategoryColor()">
+                  {{ newCategoryName() || 'New Category' }}
+                </span>
+              </div>
+              <input type="text"
+                     class="cat-form__input"
+                     [ngModel]="newCategoryName()"
+                     (ngModelChange)="newCategoryName.set($event)"
+                     (keyup.enter)="saveCategoryAdd()"
+                     [placeholder]="showCategoryAddForm() === 'income' ? 'Category name (e.g. Dividends)' : 'Category name (e.g. Hobbies)'"
+                     maxlength="20">
+              <button class="btn btn--sm btn--primary" (click)="saveCategoryAdd()">Add</button>
+              <button class="btn btn--sm btn--ghost" (click)="cancelCategoryAdd()">Cancel</button>
+            </div>
+
+            <!-- Color palette — compact horizontal strip -->
+            <div class="cat-form__row">
+              <span class="cat-form__label">Color</span>
+              <div class="cat-form__colors">
+                @for (c of categoryColors; track c.value) {
+                  <button class="cat-color"
+                          [class.cat-color--active]="newCategoryColor() === c.value"
+                          [style.background]="c.value"
+                          [title]="c.label"
+                          (click)="newCategoryColor.set(c.value)"
+                          type="button"></button>
+                }
+              </div>
+            </div>
+
+            <!-- Grouped icons — categorized -->
+            <div class="cat-form__row cat-form__row--icons">
+              <span class="cat-form__label">Icon</span>
+              <div class="cat-icons">
+                @for (group of categoryIconGroups; track group.label) {
+                  <div class="cat-icons__group">
+                    <span class="cat-icons__group-label">{{ group.label }}</span>
+                    <div class="cat-icons__list">
+                      @for (ic of group.icons; track ic) {
+                        <button class="cat-icon"
+                                [class.cat-icon--active]="newCategoryIcon() === ic"
+                                [style.borderColor]="newCategoryIcon() === ic ? newCategoryColor() : ''"
+                                (click)="newCategoryIcon.set(ic)"
+                                type="button">
+                          {{ ic }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
+        <div class="chips">
+          @for (cat of visibleCategoryObjects; track cat.id) {
+            <div class="chip-wrap"
+                 [class.chip-wrap--active]="filterCategory() === cat.name"
+                 [style.borderColor]="cat.color"
+                 [style.background]="filterCategory() === cat.name ? cat.color : ''">
+              <button class="chip-wrap__main" (click)="toggleCategory(cat.name)">
+                <span class="chip__icon">{{ cat.icon }}</span>
+                {{ cat.name }}
+                <span class="chip__count">{{ categoryCount(cat.name) }}</span>
+              </button>
+              <button class="chip-wrap__delete"
+                      (click)="removeCustomCategory(cat.type, cat.name); $event.stopPropagation()"
+                      title="Delete this category"
+                      type="button">✕</button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Date Range Filter (Accordion) -->
+  <div class="date-section" [class.date-section--open]="showDateFilter()">
+    <button class="date-section__toggle" (click)="toggleDateFilter()">
+      <span class="date-section__chevron" [class.expanded]="showDateFilter()">▶</span>
+      <span class="date-section__icon">📅</span>
+      <span class="date-section__title">Date Range</span>
+      <span class="date-section__current"
+            [class.date-section__current--active]="hasActiveDateFilter">
+        {{ dateFilterLabel }}
+      </span>
+      @if (hasActiveDateFilter) {
+        <span class="date-section__badge">Active</span>
+      }
+    </button>
+
+    @if (showDateFilter()) {
+      <div class="date-section__body">
+        <div class="date-section__top-row">
+          <span class="date-section__hint">Use quick presets or set a custom date range.</span>
+          <button class="btn btn--ghost btn--sm" (click)="clearFilters()">Clear All Filters</button>
+        </div>
+
+        <div class="date-presets">
+          <button class="preset"
+                  [class.preset--active]="filterPreset() === 'all'"
+                  (click)="applyPreset('all')">
+            All Time
+          </button>
+          <button class="preset"
+                  [class.preset--active]="filterPreset() === 'thisMonth'"
+                  (click)="applyPreset('thisMonth')">
+            📅 This Month
+          </button>
+          <button class="preset"
+                  [class.preset--active]="filterPreset() === 'last7'"
+                  (click)="applyPreset('last7')">
+            ⏱ Last 7 Days
+          </button>
+          <button class="preset"
+                  [class.preset--active]="filterPreset() === 'last30'"
+                  (click)="applyPreset('last30')">
+            🗓 Last 30 Days
+          </button>
+        </div>
+
+        <div class="date-custom">
+          <div class="date-field">
+            <label>Start</label>
+            <input type="date"
+                   [ngModel]="filterDateStart()"
+                   (ngModelChange)="filterDateStart.set($event); onCustomDateChange()">
+          </div>
+          <span class="date-separator">→</span>
+          <div class="date-field">
+            <label>End</label>
+            <input type="date"
+                   [ngModel]="filterDateEnd()"
+                   (ngModelChange)="filterDateEnd.set($event); onCustomDateChange()">
+          </div>
+        </div>
+
+        @if (filterDateStart() || filterDateEnd()) {
+          <p class="date-info">
+            @if (filterDateStart() && filterDateEnd()) {
+              Showing transactions from {{ filterDateStart() }} to {{ filterDateEnd() }}.
+            } @else if (filterDateStart()) {
+              Showing transactions from {{ filterDateStart() }} onwards.
+            } @else {
+              Showing transactions until {{ filterDateEnd() }}.
+            }
+          </p>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Category-Based Summary (Accordion) -->
+  <div class="date-section" [class.date-section--open]="showExpenseSummary()">
+    <button class="date-section__toggle" (click)="toggleExpenseSummary()">
+      <span class="date-section__chevron" [class.expanded]="showExpenseSummary()">▶</span>
+      <span class="date-section__icon">{{ summaryIcon }}</span>
+      <span class="date-section__title">{{ summaryTitle }}</span>
+      <span class="date-section__current"
+            [class.date-section__current--active]="filteredSummary.length > 0">
+        {{ filteredSummaryTotal | money }}
+      </span>
+      @if (filteredSummary.length > 0) {
+        <span class="date-section__badge">{{ filteredSummary.length }} categories</span>
+      }
+    </button>
+
+    @if (showExpenseSummary()) {
+      <div class="date-section__body">
+        @if (filterType() === 'all') {
+          <div class="summary-type-toggle">
+            <span class="summary-type-toggle__label">Show:</span>
+            <button class="view-toggle__btn"
+                    [class.view-toggle__btn--active]="effectiveSummaryType === 'expense'"
+                    (click)="setSummaryType('expense')">
+              📊 Spending
+            </button>
+            <button class="view-toggle__btn"
+                    [class.view-toggle__btn--active]="effectiveSummaryType === 'income'"
+                    (click)="setSummaryType('income')">
+              💰 Income
+            </button>
+          </div>
+        } @else {
+          <p class="date-section__hint" style="margin-top: 0.85rem; margin-bottom: 0.85rem;">
+            Distribution of {{ effectiveSummaryType === 'income' ? 'income' : 'expense' }} categories based on selected filters.
+          </p>
+        }
+
+        @if (filteredSummary.length === 0) {
+          <p class="category-summary-card__empty">
+            No {{ effectiveSummaryType === 'income' ? 'income' : 'expense' }} records found for selected filters.
+          </p>
+        } @else {
+          <div class="category-summary-list">
+            @for (item of filteredSummary; track item.category) {
+              <div class="category-summary-row"
+                   [class.category-summary-row--income]="effectiveSummaryType === 'income'">
+                <div class="category-summary-row__top">
+                  <span class="category-summary-row__category">{{ item.category }}</span>
+                  <span class="category-summary-row__amount">{{ item.total | money }}</span>
+                </div>
+                <div class="category-summary-row__bar">
+                  <span [style.width.%]="item.percent"></span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Search and Account Filter Panel -->
+  <div class="search-filter-panel">
+    <div class="search-box">
+      <span class="search-box__icon">🔍</span>
+      <input type="text"
+             class="search-box__input"
+             [ngModel]="searchQuery()"
+             (ngModelChange)="searchQuery.set($event)"
+             maxlength="50"
+             placeholder="Search in transaction descriptions...">
+      @if (searchQuery()) {
+        <button class="search-box__clear" (click)="searchQuery.set('')">✕</button>
+      }
+    </div>
+
+    @if (filterAccountId()) {
+      <div class="active-filter-chip">
+        <span class="active-filter-chip__label">🏦 Filter:</span>
+        <strong class="active-filter-chip__value">{{ accountService.nameOf(filterAccountId()) }}</strong>
+        <button class="active-filter-chip__clear" (click)="clearAccountFilter()">✕</button>
+      </div>
+    }
+  </div>
+
+  <!-- Results + Sort + View -->
+  <div class="list-toolbar">
+    <span class="list-toolbar__count">
+      <strong>{{ filtered().length }}</strong> transactions found
+      @if (filtered().length > 0 && viewMode() === 'list') {
+        <span class="list-toolbar__range">(showing {{ pageStart }}-{{ pageEnd }})</span>
+      }
+      @if (filtered().length > 0 && viewMode() === 'group') {
+        <span class="list-toolbar__range">({{ groupedCategories.length }} categories)</span>
+      }
+    </span>
+    <div class="list-toolbar__controls">
+      <div class="view-toggle">
+        <button class="view-toggle__btn"
+                [class.view-toggle__btn--active]="viewMode() === 'group'"
+                (click)="setViewMode('group')"
+                title="Group by category">
+          📂 Categories
+        </button>
+        <button class="view-toggle__btn"
+                [class.view-toggle__btn--active]="viewMode() === 'list'"
+                (click)="setViewMode('list')"
+                title="Flat list view">
+          ☰ List
+        </button>
+      </div>
+      <div class="sort-control">
+        <label>Sort:</label>
+        <select [ngModel]="sortBy()" (ngModelChange)="setSortBy($event)">
+          <option value="newest">↓ Newest First</option>
+          <option value="oldest">↑ Oldest First</option>
+          <option value="highest">↓ Highest Amount</option>
+          <option value="lowest">↑ Lowest Amount</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  @if (viewMode() === 'group' && filtered().length > 0) {
+    <div class="group-toolbar">
+      <button class="btn btn--sm btn--ghost" (click)="expandAllTxCategories()">⊞ Expand All</button>
+      <button class="btn btn--sm btn--ghost" (click)="collapseAllTxCategories()">⊟ Collapse All</button>
+    </div>
+  }
+
+  <!-- List -->
+  @if (filtered().length === 0) {
+    <div class="empty-state">
+      <p class="empty-state__icon">📋</p>
+      @if (txService.transactions().length === 0) {
+        <p class="empty-state__title">No transactions added yet.</p>
+        <p class="empty-state__hint">Start by adding your first income or expense record.</p>
+        <button class="btn btn--primary" (click)="toggleForm()">+ Add First Transaction</button>
+      } @else {
+        <p class="empty-state__title">No records found for these filters.</p>
+        <p class="empty-state__hint">Try changing the filters and try again.</p>
+        <button class="btn btn--ghost" (click)="clearFilters()">Clear Filters</button>
+      }
+    </div>
+  } @else if (viewMode() === 'group') {
+    <!-- Accordion Category View -->
+    <div class="tx-category-list">
+      @for (group of groupedCategories; track group.name) {
+        <div class="tx-category" [class.tx-category--income]="group.type === 'income'">
+          <button class="tx-category__header" (click)="toggleTxCategory(group.name)">
+            <span class="tx-category__chevron" [class.expanded]="isTxCategoryExpanded(group.name)">▶</span>
+            <span class="tx-category__icon">{{ iconForTxCategory(group.name) }}</span>
+            <span class="tx-category__name">{{ group.name }}</span>
+            <span class="tx-category__type-badge" [class.tx-category__type-badge--income]="group.type === 'income'" [class.tx-category__type-badge--transfer]="group.type === 'transfer'">
+              {{ group.type === 'income' ? 'Income' : group.type === 'expense' ? 'Expense' : 'Transfer' }}
+            </span>
+            <span class="tx-category__count">{{ group.items.length }} transactions</span>
+            <span class="tx-category__total" [class.profit-positive]="group.type === 'income'" [class.profit-negative]="group.type === 'expense'" [class.profit-neutral]="group.type === 'transfer'">
+              {{ group.type === 'income' ? '+' : group.type === 'expense' ? '-' : '⇆' }}{{ group.total | money }}
+            </span>
+          </button>
+
+          @if (isTxCategoryExpanded(group.name)) {
+            <div class="tx-category__body">
+              @for (tx of paginatedCategoryItems(group.items, group.name); track tx.id) {
+                <div class="tx-sub-item" [class.tx-sub-item--income]="tx.type === 'income'">
+                  <div class="tx-sub-item__main">
+                    <div class="tx-sub-item__left">
+                      <span class="tx-sub-item__date">{{ tx.date }}</span>
+                      <span class="tx-sub-item__desc">{{ tx.description || 'No description' }}</span>
+                      @if (tx.type === 'transfer') {
+                        <span class="tx-sub-item__account" title="Account Flow">
+                          🏦 {{ accountService.nameOf(tx.accountId) }} ➔ 🏦 {{ accountService.nameOf(tx.transferAccountId) }}
+                        </span>
+                      } @else {
+                        @if (tx.accountId) {
+                          <span class="tx-sub-item__account" title="Account">
+                            🏦 {{ accountService.nameOf(tx.accountId) }}
+                          </span>
+                        }
+                        @if (tx.paymentMethod) {
+                          <span class="tx-sub-item__method">{{ tx.paymentMethod }}</span>
+                        }
+                      }
+                      @if (tx.isRecurring) {
+                        <span class="tx-sub-item__recurring" title="This transaction is automatically repeated every month">🔄 Monthly</span>
+                      }
+                    </div>
+                    <span class="tx-sub-item__amount" [class.profit-neutral]="tx.type === 'transfer'">
+                      {{ tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : '⇆' }}{{ tx.amount | money }}
+                    </span>
+                  </div>
+                  <div class="tx-sub-item__actions">
+                    <button class="btn-edit" (click)="startEdit(tx)" title="Edit">✎</button>
+                    <button class="btn-delete" (click)="remove(tx.id)" title="Delete">✕</button>
+                  </div>
+                </div>
+              }
+
+              @if (group.items.length > categoryPageSize) {
+                <div class="sub-pagination">
+                  <span class="sub-pagination__info">
+                    {{ categoryPageStart(group.name, group.items.length) }}-{{ categoryPageEnd(group.name, group.items.length) }}
+                    / {{ group.items.length }}
+                  </span>
+                  <div class="sub-pagination__controls">
+                    <button class="sub-pagination__btn"
+                            (click)="prevCategoryPage(group.name, group.items.length)"
+                            [disabled]="getCategoryPage(group.name) === 1">
+                      ← Previous
+                    </button>
+                    @for (page of categoryPageNumbers(group.items.length); track page) {
+                      <button class="sub-pagination__page"
+                              [class.active]="getCategoryPage(group.name) === page"
+                              (click)="setCategoryPage(group.name, page, group.items.length)">
+                        {{ page }}
+                      </button>
+                    }
+                    <button class="sub-pagination__btn"
+                            (click)="nextCategoryPage(group.name, group.items.length)"
+                            [disabled]="getCategoryPage(group.name) === categoryTotalPages(group.items.length)">
+                      Next →
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- Flat List View -->
+    <div class="tx-header">
+      <span>Type</span>
+      <span>Category</span>
+      <span>Amount</span>
+      <span>Date</span>
+      <span>Description</span>
+      <span></span>
+    </div>
+
+    <div class="tx-list">
+      @for (tx of paginated(); track tx.id) {
+        <div class="tx-item" [class.tx-item--income]="tx.type === 'income'" [class.tx-item--expense]="tx.type === 'expense'" [class.tx-item--transfer]="tx.type === 'transfer'">
+          <span class="tx-item__type">
+            <span class="tx-item__icon">{{ tx.type === 'income' ? '↑' : tx.type === 'expense' ? '↓' : '⇆' }}</span>
+            <span class="tx-item__type-text">{{ tx.type === 'income' ? 'Income' : tx.type === 'expense' ? 'Expense' : 'Transfer' }}</span>
+          </span>
+
+          <span class="tx-item__category">
+            {{ tx.category }}
+            @if (tx.type === 'transfer') {
+              <span class="tx-item__method" title="Account Flow">
+                🏦 {{ accountService.nameOf(tx.accountId) }} ➔ 🏦 {{ accountService.nameOf(tx.transferAccountId) }}
+              </span>
+            } @else {
+              @if (tx.accountId) {
+                <span class="tx-item__method" title="Account">🏦 {{ accountService.nameOf(tx.accountId) }}</span>
+              }
+              @if (tx.paymentMethod) {
+                <span class="tx-item__method">{{ tx.paymentMethod }}</span>
+              }
+            }
+            @if (tx.isRecurring) {
+              <span class="tx-item__recurring" title="Monthly recurring">🔄</span>
+            }
+          </span>
+
+          <span class="tx-item__amount" [class.profit-neutral]="tx.type === 'transfer'">
+            {{ tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : '⇆' }}{{ tx.amount | money }}
+          </span>
+
+          <span class="tx-item__date">{{ tx.date }}</span>
+
+          <span class="tx-item__desc">{{ tx.description || '—' }}</span>
+
+          <div class="tx-item__actions">
+            <button class="btn-edit" (click)="startEdit(tx)" title="Edit">✎</button>
+            <button class="btn-delete" (click)="remove(tx.id)" title="Delete">✕</button>
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button class="pagination__btn"
+                (click)="previousPage()"
+                [disabled]="visiblePage === 1">
+          Previous
+        </button>
+
+        <div class="pagination__pages">
+          @for (page of pageNumbers(); track page) {
+            <button class="pagination__page"
+                    [class.pagination__page--active]="visiblePage === page"
+                    (click)="goToPage(page)">
+              {{ page }}
+            </button>
+          }
+        </div>
+
+        <button class="pagination__btn"
+                (click)="nextPage()"
+                [disabled]="visiblePage === totalPages()">
+          Next
+        </button>
+      </div>
+    }
+  }
+</div>
