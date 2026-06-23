@@ -6,7 +6,7 @@ A comprehensive personal finance platform built with Angular 17 + SCSS, featurin
 
 ## 🌐 Live Demo
 
-👉 **[finans-takip.vercel.app](https://finans-takip.vercel.app)** *(replace after deployment)*
+👉 **[personal-finance-tracker-chi-plum.vercel.app](https://personal-finance-tracker-chi-plum.vercel.app/)**
 
 ---
 
