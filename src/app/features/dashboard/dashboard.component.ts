@@ -10,6 +10,7 @@ import { ForecastService } from '../../core/services/forecast.service';
 import { NetWorthHistoryService } from '../../core/services/net-worth-history.service';
 import { FormsModule } from '@angular/forms';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
+import { DateInputDirective } from '../../shared/directives/date-input.directive';
 import { Chart, registerables } from 'chart.js';
 
 import { ThemeService } from '../../core/services/theme.service';
@@ -19,7 +20,7 @@ Chart.register(...registerables);
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, MoneyPipe, FormsModule],
+  imports: [CommonModule, RouterLink, MoneyPipe, FormsModule, DateInputDirective],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
