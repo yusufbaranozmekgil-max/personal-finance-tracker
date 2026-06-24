@@ -15,7 +15,7 @@ import {
   Asset, AssetCurrency, AssetType, Trade,
   ASSET_CURRENCIES, ASSET_PRESETS
 } from '../../core/models/asset.model';
-import { MAX_MONEY_AMOUNT, MAX_NAME_LENGTH } from '../../core/constants/validation.constants';
+import { MAX_NAME_LENGTH, maxMoneyInTRY } from '../../core/constants/validation.constants';
 
 @Component({
   selector: 'app-portfolio',
@@ -40,7 +40,10 @@ export class PortfolioComponent implements OnInit {
   assetCurrencies = [...ASSET_CURRENCIES];
   presets = ASSET_PRESETS;
   maxNameLength = MAX_NAME_LENGTH;
-  maxMoneyAmount = MAX_MONEY_AMOUNT;
+  // Dynamic cap: 1 trillion USD converted to TRY via current exchange rate
+  get maxMoneyAmount(): number {
+    return maxMoneyInTRY(this.settingsService?.settings()?.usdRate ?? 32);
+  }
 
   // Category icon mapping
   private readonly categoryIcons: Record<string, string> = {
@@ -382,7 +385,8 @@ export class PortfolioComponent implements OnInit {
       return;
     }
     if (quantity > this.maxMoneyAmount || unitPrice > this.maxMoneyAmount || purchasePrice > this.maxMoneyAmount) {
-      this.toast.error('Numeric values can be at most 1 trillion.');
+      const usdRate = this.settingsService.settings().usdRate || 32;
+      this.toast.error(`Values cannot exceed 1 trillion USD (≈ ${this.maxMoneyAmount.toLocaleString('de-DE')} ₺ at rate 1 USD = ${usdRate} ₺).`);
       return;
     }
 
@@ -457,7 +461,8 @@ export class PortfolioComponent implements OnInit {
       return;
     }
     if (quantity > this.maxMoneyAmount || price > this.maxMoneyAmount) {
-      this.toast.error('Numeric values can be at most 1 trillion.');
+      const usdRate = this.settingsService.settings().usdRate || 32;
+      this.toast.error(`Values cannot exceed 1 trillion USD (≈ ${this.maxMoneyAmount.toLocaleString('de-DE')} ₺ at rate 1 USD = ${usdRate} ₺).`);
       return;
     }
 
@@ -575,7 +580,8 @@ export class PortfolioComponent implements OnInit {
       return;
     }
     if (newPrice > this.maxMoneyAmount) {
-      this.toast.error('Price can be at most 1 trillion.');
+      const usdRate = this.settingsService.settings().usdRate || 32;
+      this.toast.error(`Price cannot exceed 1 trillion USD (≈ ${this.maxMoneyAmount.toLocaleString('de-DE')} ₺ at rate 1 USD = ${usdRate} ₺).`);
       return;
     }
     if (newPrice === asset.unitPrice) {

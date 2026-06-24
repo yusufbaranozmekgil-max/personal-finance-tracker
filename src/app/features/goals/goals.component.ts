@@ -5,10 +5,11 @@ import { GoalService } from '../../core/services/goal.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { TransactionService } from '../../core/services/transaction.service';
+import { SettingsService } from '../../core/services/settings.service';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import { ThousandSeparatorDirective } from '../../shared/directives/thousand-separator.directive';
 import { Goal, GOAL_PRESETS } from '../../core/models/goal.model';
-import { MAX_DESCRIPTION_LENGTH, MAX_MONEY_AMOUNT, MAX_NAME_LENGTH } from '../../core/constants/validation.constants';
+import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH, maxMoneyInTRY } from '../../core/constants/validation.constants';
 
 @Component({
   selector: 'app-goals',
@@ -22,11 +23,14 @@ export class GoalsComponent {
   toast = inject(ToastService);
   confirmService = inject(ConfirmService);
   txService = inject(TransactionService);
+  settingsService = inject(SettingsService);
 
   presets = GOAL_PRESETS;
   maxNameLength = MAX_NAME_LENGTH;
   maxDescriptionLength = MAX_DESCRIPTION_LENGTH;
-  maxMoneyAmount = MAX_MONEY_AMOUNT;
+  get maxMoneyAmount(): number {
+    return maxMoneyInTRY(this.settingsService?.settings()?.usdRate ?? 32);
+  }
   readonly maxGoalCount = 8;
 
   showForm = signal(false);
@@ -100,7 +104,8 @@ export class GoalsComponent {
       return;
     }
     if (targetAmount > this.maxMoneyAmount || currentAmount > this.maxMoneyAmount) {
-      this.toast.error('Amounts can be at most 1 trillion.');
+      const usdRate = this.settingsService.settings().usdRate || 32;
+      this.toast.error(`Amounts cannot exceed 1 trillion USD (≈ ${this.maxMoneyAmount.toLocaleString('de-DE')} ₺ at rate 1 USD = ${usdRate} ₺).`);
       return;
     }
 
@@ -193,7 +198,8 @@ export class GoalsComponent {
       return;
     }
     if (amount > this.maxMoneyAmount || goal.currentAmount + amount > this.maxMoneyAmount) {
-      this.toast.error('Savings can be at most 1 trillion.');
+      const usdRate = this.settingsService.settings().usdRate || 32;
+      this.toast.error(`Savings cannot exceed 1 trillion USD (≈ ${this.maxMoneyAmount.toLocaleString('de-DE')} ₺ at rate 1 USD = ${usdRate} ₺).`);
       return;
     }
 

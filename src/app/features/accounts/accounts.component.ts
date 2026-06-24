@@ -8,6 +8,8 @@ import { ConfirmService } from '../../core/services/confirm.service';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import { ThousandSeparatorDirective } from '../../shared/directives/thousand-separator.directive';
 import { Account, ACCOUNT_TYPES, ACCOUNT_PRESETS, AccountType } from '../../core/models/account.model';
+import { SettingsService } from '../../core/services/settings.service';
+import { maxMoneyInTRY } from '../../core/constants/validation.constants';
 
 @Component({
   selector: 'app-accounts',
@@ -20,6 +22,11 @@ export class AccountsComponent {
   accountService = inject(AccountService);
   toast = inject(ToastService);
   confirmService = inject(ConfirmService);
+  settingsService = inject(SettingsService);
+
+  get maxMoneyAmount(): number {
+    return maxMoneyInTRY(this.settingsService?.settings()?.usdRate ?? 32);
+  }
 
   accountTypes = ACCOUNT_TYPES;
   presets = ACCOUNT_PRESETS;
@@ -78,6 +85,12 @@ export class AccountsComponent {
     const isEdit = this.editingId() !== null;
     if (!isEdit && this.accountService.accounts().length >= this.maxAccountCount) {
       this.toast.error(`You can add up to ${this.maxAccountCount} accounts.`);
+      return;
+    }
+    const balance = Number(this.form.initialBalance) || 0;
+    if (Math.abs(balance) > this.maxMoneyAmount) {
+      const usdRate = this.settingsService.settings().usdRate || 32;
+      this.toast.error(`Opening balance cannot exceed 1 trillion USD (≈ ${this.maxMoneyAmount.toLocaleString('de-DE')} ₺ at rate 1 USD = ${usdRate} ₺).`);
       return;
     }
 
