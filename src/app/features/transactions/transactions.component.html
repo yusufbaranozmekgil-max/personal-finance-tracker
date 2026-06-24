@@ -36,7 +36,7 @@
         </div>
         <div class="field">
           <label>Date</label>
-          <input type="date" [(ngModel)]="form.date">
+          <input type="date" min="1000-01-01" max="9999-12-31" [(ngModel)]="form.date">
         </div>
         @if (form.type !== 'transfer') {
           <div class="field">
@@ -294,15 +294,19 @@
           <div class="date-field">
             <label>Start</label>
             <input type="date"
+                   min="1000-01-01"
+                   max="9999-12-31"
                    [ngModel]="filterDateStart()"
-                   (ngModelChange)="filterDateStart.set($event); onCustomDateChange()">
+                   (ngModelChange)="onDateStartChange($event)">
           </div>
           <span class="date-separator">→</span>
           <div class="date-field">
             <label>End</label>
             <input type="date"
+                   min="1000-01-01"
+                   max="9999-12-31"
                    [ngModel]="filterDateEnd()"
-                   (ngModelChange)="filterDateEnd.set($event); onCustomDateChange()">
+                   (ngModelChange)="onDateEndChange($event)">
           </div>
         </div>
 

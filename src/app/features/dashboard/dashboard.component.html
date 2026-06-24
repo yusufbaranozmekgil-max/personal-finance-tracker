@@ -35,12 +35,12 @@
       <div class="custom-dates">
         <div class="date-input-wrapper">
           <label>Start</label>
-          <input type="date" [ngModel]="filterDateStart()" (ngModelChange)="onDateStartChange($event)">
+          <input type="date" min="1000-01-01" max="9999-12-31" [ngModel]="filterDateStart()" (ngModelChange)="onDateStartChange($event)">
         </div>
         <span class="date-separator">→</span>
         <div class="date-input-wrapper">
           <label>End</label>
-          <input type="date" [ngModel]="filterDateEnd()" (ngModelChange)="onDateEndChange($event)">
+          <input type="date" min="1000-01-01" max="9999-12-31" [ngModel]="filterDateEnd()" (ngModelChange)="onDateEndChange($event)">
         </div>
       </div>
     </div>

@@ -557,6 +557,26 @@ export class TransactionsComponent implements OnInit {
     this.filterPreset.set('custom');
   }
 
+  onDateStartChange(val: string): void {
+    this.resetPagination();
+    this.filterPreset.set('custom');
+    if (val && !isValidDate(val)) {
+      this.toast.error('Please enter a valid date (year 1000-9999).');
+      return;
+    }
+    this.filterDateStart.set(val);
+  }
+
+  onDateEndChange(val: string): void {
+    this.resetPagination();
+    this.filterPreset.set('custom');
+    if (val && !isValidDate(val)) {
+      this.toast.error('Please enter a valid date (year 1000-9999).');
+      return;
+    }
+    this.filterDateEnd.set(val);
+  }
+
   onTypeChange(): void {
     if (this.form.type === 'transfer') {
       this.form.category = 'Transfer';

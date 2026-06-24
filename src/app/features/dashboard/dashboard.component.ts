@@ -11,6 +11,8 @@ import { NetWorthHistoryService } from '../../core/services/net-worth-history.se
 import { FormsModule } from '@angular/forms';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import { Chart, registerables } from 'chart.js';
+import { ToastService } from '../../core/services/toast.service';
+import { isValidDate } from '../../core/constants/validation.constants';
 
 import { ThemeService } from '../../core/services/theme.service';
 
@@ -32,6 +34,7 @@ export class DashboardComponent implements OnInit {
   forecastService = inject(ForecastService);
   netWorthHistoryService = inject(NetWorthHistoryService);
   themeService = inject(ThemeService);
+  toast = inject(ToastService);
   readonly Math = Math;  // to use in template
 
   // Template helper getters (@let not available in Angular 17)
@@ -354,11 +357,19 @@ export class DashboardComponent implements OnInit {
 
   onDateStartChange(val: string): void {
     this.dashboardPreset.set('custom');
+    if (val && !isValidDate(val)) {
+      this.toast.error('Please enter a valid date (year 1000-9999).');
+      return;
+    }
     this.filterDateStart.set(val);
   }
 
   onDateEndChange(val: string): void {
     this.dashboardPreset.set('custom');
+    if (val && !isValidDate(val)) {
+      this.toast.error('Please enter a valid date (year 1000-9999).');
+      return;
+    }
     this.filterDateEnd.set(val);
   }
 
