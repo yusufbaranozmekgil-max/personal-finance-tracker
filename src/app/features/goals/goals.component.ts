@@ -309,8 +309,4 @@ export class GoalsComponent {
   get overdueCount(): number {
     return this.goalService.goals().filter(g => this.isOverdue(g)).length;
   }
-
-  get minDate(): string {
-    return new Date().toISOString().slice(0, 10);
-  }
 }
