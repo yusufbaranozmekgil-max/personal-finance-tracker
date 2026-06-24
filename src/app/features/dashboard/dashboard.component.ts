@@ -13,6 +13,7 @@ import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import { Chart, registerables } from 'chart.js';
 import { ToastService } from '../../core/services/toast.service';
 import { isValidDate } from '../../core/constants/validation.constants';
+import { DateLimitDirective } from '../../shared/directives/date-limit.directive';
 
 import { ThemeService } from '../../core/services/theme.service';
 
@@ -21,7 +22,7 @@ Chart.register(...registerables);
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, MoneyPipe, FormsModule],
+  imports: [CommonModule, RouterLink, MoneyPipe, FormsModule, DateLimitDirective],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })

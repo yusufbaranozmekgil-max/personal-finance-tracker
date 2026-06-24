@@ -11,6 +11,7 @@ import { CategoryService } from '../../core/services/category.service';
 import { TransactionService } from '../../core/services/transaction.service';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import { ThousandSeparatorDirective } from '../../shared/directives/thousand-separator.directive';
+import { DateLimitDirective } from '../../shared/directives/date-limit.directive';
 import {
   Asset, AssetCurrency, AssetType, Trade,
   ASSET_CURRENCIES, ASSET_PRESETS
@@ -20,7 +21,7 @@ import { MAX_NAME_LENGTH, maxMoneyInTRY, isValidDate } from '../../core/constant
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [CommonModule, FormsModule, MoneyPipe, ThousandSeparatorDirective],
+  imports: [CommonModule, FormsModule, MoneyPipe, ThousandSeparatorDirective, DateLimitDirective],
   templateUrl: './portfolio.component.html',
   styleUrl: './portfolio.component.scss'
 })

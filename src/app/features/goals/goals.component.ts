@@ -10,11 +10,12 @@ import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import { ThousandSeparatorDirective } from '../../shared/directives/thousand-separator.directive';
 import { Goal, GOAL_PRESETS } from '../../core/models/goal.model';
 import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH, maxMoneyInTRY, isValidDate } from '../../core/constants/validation.constants';
+import { DateLimitDirective } from '../../shared/directives/date-limit.directive';
 
 @Component({
   selector: 'app-goals',
   standalone: true,
-  imports: [CommonModule, FormsModule, MoneyPipe, ThousandSeparatorDirective],
+  imports: [CommonModule, FormsModule, MoneyPipe, ThousandSeparatorDirective, DateLimitDirective],
   templateUrl: './goals.component.html',
   styleUrl: './goals.component.scss'
 })
