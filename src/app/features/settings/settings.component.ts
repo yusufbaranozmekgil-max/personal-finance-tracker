@@ -344,7 +344,7 @@ export class SettingsComponent {
   providerInfo: Record<string, { name: string; url: string; quota: string }> = {
     twelvedata:   { name: 'Twelve Data',   url: 'https://twelvedata.com/register',          quota: '800 requests/day' },
     alphavantage: { name: 'Alpha Vantage', url: 'https://www.alphavantage.co/support/#api-key', quota: '25 requests/day' },
-    finnhub:      { name: 'Finnhub',       url: 'https://finnhub.io/register',              quota: '60 istek/dk (BIST premium)' },
+    finnhub:      { name: 'Finnhub',       url: 'https://finnhub.io/register',              quota: '60 requests/min (BIST premium)' },
   };
 
   async testApiKey(): Promise<void> {

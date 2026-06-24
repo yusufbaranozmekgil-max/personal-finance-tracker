@@ -93,11 +93,11 @@
         </div>
         <div class="field">
           <label>Target Amount *</label>
-          <input type="text" appThousandSeparator [(ngModel)]="form.targetAmount" placeholder="50.000">
+          <input type="text" appThousandSeparator [appMax]="maxMoneyAmount" [(ngModel)]="form.targetAmount" placeholder="50.000">
         </div>
         <div class="field">
           <label>Current Savings</label>
-          <input type="text" appThousandSeparator [(ngModel)]="form.currentAmount" placeholder="0">
+          <input type="text" appThousandSeparator [appMax]="maxMoneyAmount" [(ngModel)]="form.currentAmount" placeholder="0">
         </div>
         <div class="field field--full">
           <label>Description</label>
@@ -193,6 +193,7 @@
               <div class="quick-add__row">
                 <input type="text"
                        appThousandSeparator
+                       [appMax]="maxMoneyAmount"
                        [ngModel]="quickAddValue()"
                        (ngModelChange)="quickAddValue.set($event)"
                        placeholder="How much would you like to add?">

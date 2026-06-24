@@ -51,7 +51,7 @@
         </div>
         <div class="field">
           <label>Opening Balance</label>
-          <input type="text" appThousandSeparator [(ngModel)]="form.initialBalance" placeholder="0,00">
+          <input type="text" appThousandSeparator [appMax]="maxMoneyAmount" [(ngModel)]="form.initialBalance" placeholder="0,00">
         </div>
         <div class="field">
           <label>Currency</label>
