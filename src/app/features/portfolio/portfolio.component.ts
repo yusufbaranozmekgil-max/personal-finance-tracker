@@ -40,6 +40,7 @@ export class PortfolioComponent implements OnInit {
   assetCurrencies = [...ASSET_CURRENCIES];
   presets = ASSET_PRESETS;
   maxNameLength = MAX_NAME_LENGTH;
+  readonly maxQuantityPrice = 1_000_000_000_000; // 1 trillion
   // Dynamic cap: 1 trillion USD converted to TRY via current exchange rate
   get maxMoneyAmount(): number {
     return maxMoneyInTRY(this.settingsService?.settings()?.usdRate ?? 32);
@@ -393,9 +394,8 @@ export class PortfolioComponent implements OnInit {
       this.toast.error('Quantity and current price must be greater than 0.');
       return;
     }
-    if (quantity > this.maxMoneyAmount || unitPrice > this.maxMoneyAmount || purchasePrice > this.maxMoneyAmount) {
-      const usdRate = this.settingsService.settings().usdRate || 32;
-      this.toast.error(`Values cannot exceed 1 trillion USD (≈ ${this.maxMoneyAmount.toLocaleString('de-DE')} ₺ at rate 1 USD = ${usdRate} ₺).`);
+    if (quantity > this.maxQuantityPrice || unitPrice > this.maxQuantityPrice || purchasePrice > this.maxQuantityPrice) {
+      this.toast.error('Values cannot exceed 1 trillion.');
       return;
     }
 
@@ -469,9 +469,8 @@ export class PortfolioComponent implements OnInit {
       this.toast.error('Quantity and price must be greater than 0.');
       return;
     }
-    if (quantity > this.maxMoneyAmount || price > this.maxMoneyAmount) {
-      const usdRate = this.settingsService.settings().usdRate || 32;
-      this.toast.error(`Values cannot exceed 1 trillion USD (≈ ${this.maxMoneyAmount.toLocaleString('de-DE')} ₺ at rate 1 USD = ${usdRate} ₺).`);
+    if (quantity > this.maxQuantityPrice || price > this.maxQuantityPrice) {
+      this.toast.error('Values cannot exceed 1 trillion.');
       return;
     }
 
@@ -588,9 +587,8 @@ export class PortfolioComponent implements OnInit {
       this.toast.error('Please enter a valid price.');
       return;
     }
-    if (newPrice > this.maxMoneyAmount) {
-      const usdRate = this.settingsService.settings().usdRate || 32;
-      this.toast.error(`Price cannot exceed 1 trillion USD (≈ ${this.maxMoneyAmount.toLocaleString('de-DE')} ₺ at rate 1 USD = ${usdRate} ₺).`);
+    if (newPrice > this.maxQuantityPrice) {
+      this.toast.error('Price cannot exceed 1 trillion.');
       return;
     }
     if (newPrice === asset.unitPrice) {

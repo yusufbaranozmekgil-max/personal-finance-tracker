@@ -104,15 +104,15 @@
         </div>
         <div class="field">
           <label>Quantity *</label>
-          <input type="text" appThousandSeparator [appMax]="maxMoneyAmount" [(ngModel)]="form.quantity" placeholder="0">
+          <input type="text" appThousandSeparator [appMax]="maxQuantityPrice" [(ngModel)]="form.quantity" placeholder="0">
         </div>
         <div class="field">
           <label>Buy Price ({{ currencySymbol(form.currency) }})</label>
-          <input type="text" appThousandSeparator [appMax]="maxMoneyAmount" [(ngModel)]="form.purchasePrice" placeholder="0,00">
+          <input type="text" appThousandSeparator [appMax]="maxQuantityPrice" [(ngModel)]="form.purchasePrice" placeholder="0,00">
         </div>
         <div class="field field--full">
           <label>Current Price ({{ currencySymbol(form.currency) }}) *</label>
-          <input type="text" appThousandSeparator [appMax]="maxMoneyAmount" [(ngModel)]="form.unitPrice" placeholder="0,00">
+          <input type="text" appThousandSeparator [appMax]="maxQuantityPrice" [(ngModel)]="form.unitPrice" placeholder="0,00">
         </div>
 
         @if (!editingId() && form.quantity > 0 && form.purchasePrice > 0) {
@@ -336,7 +336,7 @@
                         <div class="quick-price__input-row">
                           <input type="text"
                                  appThousandSeparator
-                                 [appMax]="maxMoneyAmount"
+                                 [appMax]="maxQuantityPrice"
                                  [ngModel]="quickPriceValue()"
                                  (ngModelChange)="quickPriceValue.set($event)">
                           <button class="btn btn--sm btn--primary" (click)="saveQuickPrice(asset)">✓</button>
@@ -366,11 +366,11 @@
                           </label>
                           <label>
                             Quantity
-                            <input type="text" appThousandSeparator [appMax]="maxMoneyAmount" [(ngModel)]="tradeForm.quantity">
+                            <input type="text" appThousandSeparator [appMax]="maxQuantityPrice" [(ngModel)]="tradeForm.quantity">
                           </label>
                           <label>
                             Price ({{ currencySymbol(asset.currency) }})
-                            <input type="text" appThousandSeparator [appMax]="maxMoneyAmount" [(ngModel)]="tradeForm.price">
+                            <input type="text" appThousandSeparator [appMax]="maxQuantityPrice" [(ngModel)]="tradeForm.price">
                           </label>
                         </div>
                         <div class="trade-form__actions">
