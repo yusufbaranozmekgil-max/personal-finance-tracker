@@ -45,6 +45,15 @@ export class PortfolioComponent implements OnInit {
     return maxMoneyInTRY(this.settingsService?.settings()?.usdRate ?? 32);
   }
 
+  // Currency code → symbol mapping (so labels show ₺/$/€ instead of TRY/USD/EUR)
+  currencySymbol(code: string | undefined): string {
+    if (!code) return '';
+    if (code === 'TRY') return '₺';
+    if (code === 'USD') return '$';
+    if (code === 'EUR') return '€';
+    return code;
+  }
+
   // Category icon mapping
   private readonly categoryIcons: Record<string, string> = {
     'Crypto': '💎',

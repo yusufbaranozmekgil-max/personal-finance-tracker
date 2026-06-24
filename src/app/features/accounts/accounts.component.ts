@@ -28,6 +28,14 @@ export class AccountsComponent {
     return maxMoneyInTRY(this.settingsService?.settings()?.usdRate ?? 32);
   }
 
+  currencySymbol(code: string | undefined): string {
+    if (!code) return '';
+    if (code === 'TRY') return '₺';
+    if (code === 'USD') return '$';
+    if (code === 'EUR') return '€';
+    return code;
+  }
+
   accountTypes = ACCOUNT_TYPES;
   presets = ACCOUNT_PRESETS;
   readonly maxAccountCount = 10;

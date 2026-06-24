@@ -56,9 +56,9 @@
         <div class="field">
           <label>Currency</label>
           <select [(ngModel)]="form.currency">
-            <option value="TRY">₺ TRY</option>
-            <option value="USD">$ USD</option>
-            <option value="EUR">€ EUR</option>
+            <option value="TRY">₺</option>
+            <option value="USD">$</option>
+            <option value="EUR">€</option>
           </select>
         </div>
       </div>
@@ -88,7 +88,7 @@
               <span class="account-card__icon">{{ iconFor(account.type) }}</span>
               <div>
                 <h3 class="account-card__name">{{ account.name }}</h3>
-                <span class="account-card__type">{{ labelFor(account.type) }} · {{ account.currency }}</span>
+                <span class="account-card__type">{{ labelFor(account.type) }} · {{ currencySymbol(account.currency) }}</span>
               </div>
             </div>
             <span class="account-card__tx-count" [routerLink]="['/transactions']" [queryParams]="{ accountId: account.id }" style="cursor: pointer;">

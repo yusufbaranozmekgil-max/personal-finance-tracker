@@ -98,7 +98,7 @@
           <label>Currency</label>
           <select [(ngModel)]="form.currency">
             @for (c of assetCurrencies; track c) {
-              <option [value]="c">{{ c }}</option>
+              <option [value]="c">{{ currencySymbol(c) }}</option>
             }
           </select>
         </div>
@@ -107,11 +107,11 @@
           <input type="text" appThousandSeparator [(ngModel)]="form.quantity" placeholder="0">
         </div>
         <div class="field">
-          <label>Buy Price ({{ form.currency }})</label>
+          <label>Buy Price ({{ currencySymbol(form.currency) }})</label>
           <input type="text" appThousandSeparator [(ngModel)]="form.purchasePrice" placeholder="0,00">
         </div>
         <div class="field field--full">
-          <label>Current Price ({{ form.currency }}) *</label>
+          <label>Current Price ({{ currencySymbol(form.currency) }}) *</label>
           <input type="text" appThousandSeparator [(ngModel)]="form.unitPrice" placeholder="0,00">
         </div>
 
@@ -122,7 +122,7 @@
               <span class="link-expense-checkbox__text">
                 💰 Record purchase as an expense and deduct from balance
                 <span class="link-expense-checkbox__hint">
-                  {{ form.quantity }} × {{ form.purchasePrice }} {{ form.currency }} will be
+                  {{ form.quantity }} × {{ form.purchasePrice }} {{ currencySymbol(form.currency) }} will be
                   automatically added as an expense under the <strong>"Investment"</strong> category.
                 </span>
               </span>
@@ -236,7 +236,7 @@
                         <span class="asset-card__symbol">{{ asset.symbol }}</span>
                         <div>
                           <span class="asset-card__name">{{ asset.name }}</span>
-                          <span class="asset-card__type">{{ asset.type }} · {{ asset.currency }}</span>
+                          <span class="asset-card__type">{{ asset.type }} · {{ currencySymbol(asset.currency) }}</span>
                         </div>
                       </div>
                       <div class="asset-card__value-block">
@@ -257,11 +257,11 @@
                       </div>
                       <div class="detail-item">
                         <span class="detail-item__label">Buy Price</span>
-                        <span class="detail-item__value">{{ asset.purchasePrice }} {{ asset.currency }}</span>
+                        <span class="detail-item__value">{{ asset.purchasePrice }} {{ currencySymbol(asset.currency) }}</span>
                       </div>
                       <div class="detail-item">
                         <span class="detail-item__label">Current Price</span>
-                        <span class="detail-item__value">{{ asset.unitPrice }} {{ asset.currency }}</span>
+                        <span class="detail-item__value">{{ asset.unitPrice }} {{ currencySymbol(asset.currency) }}</span>
                       </div>
                       <div class="detail-item">
                         <span class="detail-item__label">Portfolio Share</span>
@@ -273,17 +273,17 @@
                       <div class="calc-row">
                         <span class="calc-row__label">📊 Total Value</span>
                         <span class="calc-row__formula">
-                          {{ asset.quantity }} × {{ asset.unitPrice }} {{ asset.currency }}
+                          {{ asset.quantity }} × {{ asset.unitPrice }} {{ currencySymbol(asset.currency) }}
                           <span class="calc-row__equals">=</span>
-                          <strong>{{ (asset.quantity * asset.unitPrice) | number:'1.2-2' }} {{ asset.currency }}</strong>
+                          <strong>{{ (asset.quantity * asset.unitPrice) | number:'1.2-2' }} {{ currencySymbol(asset.currency) }}</strong>
                         </span>
                       </div>
                       <div class="calc-row">
                         <span class="calc-row__label">💰 Cost</span>
                         <span class="calc-row__formula">
-                          {{ asset.quantity }} × {{ asset.purchasePrice }} {{ asset.currency }}
+                          {{ asset.quantity }} × {{ asset.purchasePrice }} {{ currencySymbol(asset.currency) }}
                           <span class="calc-row__equals">=</span>
-                          <strong>{{ (asset.quantity * asset.purchasePrice) | number:'1.2-2' }} {{ asset.currency }}</strong>
+                          <strong>{{ (asset.quantity * asset.purchasePrice) | number:'1.2-2' }} {{ currencySymbol(asset.currency) }}</strong>
                         </span>
                       </div>
                       <div class="calc-row calc-row--profit"
@@ -332,7 +332,7 @@
 
                     @if (quickPriceId() === asset.id) {
                       <div class="quick-price">
-                        <label>💲 New Current Price ({{ asset.currency }})</label>
+                        <label>💲 New Current Price ({{ currencySymbol(asset.currency) }})</label>
                         <div class="quick-price__input-row">
                           <input type="text"
                                  appThousandSeparator
@@ -341,7 +341,7 @@
                           <button class="btn btn--sm btn--primary" (click)="saveQuickPrice(asset)">✓</button>
                           <button class="btn btn--sm btn--ghost" (click)="cancelQuickPrice()">✕</button>
                         </div>
-                        <p class="quick-price__hint">Previous price: {{ asset.unitPrice }} {{ asset.currency }}</p>
+                        <p class="quick-price__hint">Previous price: {{ asset.unitPrice }} {{ currencySymbol(asset.currency) }}</p>
                       </div>
                     }
 
@@ -368,7 +368,7 @@
                             <input type="text" appThousandSeparator [(ngModel)]="tradeForm.quantity">
                           </label>
                           <label>
-                            Price ({{ asset.currency }})
+                            Price ({{ currencySymbol(asset.currency) }})
                             <input type="text" appThousandSeparator [(ngModel)]="tradeForm.price">
                           </label>
                         </div>
