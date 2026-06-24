@@ -6,13 +6,14 @@ import { ToastService } from '../../core/services/toast.service';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { TransactionService } from '../../core/services/transaction.service';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
+import { ThousandSeparatorDirective } from '../../shared/directives/thousand-separator.directive';
 import { Goal, GOAL_PRESETS } from '../../core/models/goal.model';
 import { MAX_DESCRIPTION_LENGTH, MAX_MONEY_AMOUNT, MAX_NAME_LENGTH } from '../../core/constants/validation.constants';
 
 @Component({
   selector: 'app-goals',
   standalone: true,
-  imports: [CommonModule, FormsModule, MoneyPipe],
+  imports: [CommonModule, FormsModule, MoneyPipe, ThousandSeparatorDirective],
   templateUrl: './goals.component.html',
   styleUrl: './goals.component.scss'
 })

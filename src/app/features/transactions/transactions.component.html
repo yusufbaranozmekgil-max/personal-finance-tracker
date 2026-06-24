@@ -32,7 +32,7 @@
         }
         <div class="field">
           <label>Amount</label>
-          <input type="number" [(ngModel)]="form.amount" min="0.01" [max]="maxMoneyAmount" step="0.01" placeholder="0.00">
+          <input type="text" appThousandSeparator [(ngModel)]="form.amount" placeholder="0,00">
         </div>
         <div class="field">
           <label>Date</label>

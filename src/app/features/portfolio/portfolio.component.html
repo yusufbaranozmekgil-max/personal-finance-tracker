@@ -104,15 +104,15 @@
         </div>
         <div class="field">
           <label>Quantity *</label>
-          <input type="number" [(ngModel)]="form.quantity" min="0.01" [max]="maxMoneyAmount" step="any" placeholder="0">
+          <input type="text" appThousandSeparator [(ngModel)]="form.quantity" placeholder="0">
         </div>
         <div class="field">
           <label>Buy Price ({{ form.currency }})</label>
-          <input type="number" [(ngModel)]="form.purchasePrice" min="0" [max]="maxMoneyAmount" step="any" placeholder="0.00">
+          <input type="text" appThousandSeparator [(ngModel)]="form.purchasePrice" placeholder="0,00">
         </div>
         <div class="field field--full">
           <label>Current Price ({{ form.currency }}) *</label>
-          <input type="number" [(ngModel)]="form.unitPrice" min="0.01" [max]="maxMoneyAmount" step="any" placeholder="0.00">
+          <input type="text" appThousandSeparator [(ngModel)]="form.unitPrice" placeholder="0,00">
         </div>
 
         @if (!editingId() && form.quantity > 0 && form.purchasePrice > 0) {
@@ -334,10 +334,10 @@
                       <div class="quick-price">
                         <label>💲 New Current Price ({{ asset.currency }})</label>
                         <div class="quick-price__input-row">
-                          <input type="number"
+                          <input type="text"
+                                 appThousandSeparator
                                  [ngModel]="quickPriceValue()"
-                                 (ngModelChange)="quickPriceValue.set($event)"
-                                 min="0.01" [max]="maxMoneyAmount" step="any">
+                                 (ngModelChange)="quickPriceValue.set($event)">
                           <button class="btn btn--sm btn--primary" (click)="saveQuickPrice(asset)">✓</button>
                           <button class="btn btn--sm btn--ghost" (click)="cancelQuickPrice()">✕</button>
                         </div>
@@ -365,11 +365,11 @@
                           </label>
                           <label>
                             Quantity
-                            <input type="number" [(ngModel)]="tradeForm.quantity" min="0.00000001" [max]="maxMoneyAmount" step="any">
+                            <input type="text" appThousandSeparator [(ngModel)]="tradeForm.quantity">
                           </label>
                           <label>
                             Price ({{ asset.currency }})
-                            <input type="number" [(ngModel)]="tradeForm.price" min="0.01" [max]="maxMoneyAmount" step="any">
+                            <input type="text" appThousandSeparator [(ngModel)]="tradeForm.price">
                           </label>
                         </div>
                         <div class="trade-form__actions">

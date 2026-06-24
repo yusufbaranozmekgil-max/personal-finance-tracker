@@ -6,12 +6,13 @@ import { AccountService } from '../../core/services/account.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
+import { ThousandSeparatorDirective } from '../../shared/directives/thousand-separator.directive';
 import { Account, ACCOUNT_TYPES, ACCOUNT_PRESETS, AccountType } from '../../core/models/account.model';
 
 @Component({
   selector: 'app-accounts',
   standalone: true,
-  imports: [CommonModule, FormsModule, MoneyPipe, RouterLink],
+  imports: [CommonModule, FormsModule, MoneyPipe, RouterLink, ThousandSeparatorDirective],
   templateUrl: './accounts.component.html',
   styleUrl: './accounts.component.scss'
 })
