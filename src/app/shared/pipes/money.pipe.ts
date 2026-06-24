@@ -29,7 +29,8 @@ export class MoneyPipe implements PipeTransform {
       value = amountInTRY / s.eurRate;
     }
 
-    const formatted = value.toLocaleString('en-US', {
+    // Use 'de-DE' locale for European formatting: 1.568,32 (dots as thousands separator)
+    const formatted = value.toLocaleString('de-DE', {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     });

@@ -7,10 +7,11 @@ import { ToastService } from '../../core/services/toast.service';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { CategoryService } from '../../core/services/category.service';
 import { AccountService } from '../../core/services/account.service';
+import { SettingsService } from '../../core/services/settings.service';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import { Transaction, PAYMENT_METHODS, TransactionType } from '../../core/models/transaction.model';
 import { CATEGORY_COLORS, CATEGORY_ICONS, CATEGORY_ICON_GROUPS } from '../../core/models/category.model';
-import { MAX_DESCRIPTION_LENGTH, MAX_MONEY_AMOUNT } from '../../core/constants/validation.constants';
+import { MAX_DESCRIPTION_LENGTH, MAX_MONEY_AMOUNT, maxMoneyInTRY } from '../../core/constants/validation.constants';
 
 @Component({
   selector: 'app-transactions',
@@ -26,10 +27,14 @@ export class TransactionsComponent implements OnInit {
   confirmService = inject(ConfirmService);
   categoryService = inject(CategoryService);
   accountService = inject(AccountService);
+  settingsService = inject(SettingsService);
 
   paymentMethods = [...PAYMENT_METHODS];
   maxDescriptionLength = MAX_DESCRIPTION_LENGTH;
-  maxMoneyAmount = MAX_MONEY_AMOUNT;
+  // Dynamic cap: 1 trillion USD converted to TRY via current exchange rate
+  get maxMoneyAmount(): number {
+    return maxMoneyInTRY(this.settingsService?.settings()?.usdRate ?? 32);
+  }
 
   showForm = signal(false);
   editingId = signal<string | null>(null);
