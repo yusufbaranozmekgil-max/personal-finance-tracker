@@ -8,14 +8,13 @@ import { TransactionService } from '../../core/services/transaction.service';
 import { SettingsService } from '../../core/services/settings.service';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import { ThousandSeparatorDirective } from '../../shared/directives/thousand-separator.directive';
-import { DateInputDirective } from '../../shared/directives/date-input.directive';
 import { Goal, GOAL_PRESETS } from '../../core/models/goal.model';
 import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH, maxMoneyInTRY, isValidDate } from '../../core/constants/validation.constants';
 
 @Component({
   selector: 'app-goals',
   standalone: true,
-  imports: [CommonModule, FormsModule, MoneyPipe, ThousandSeparatorDirective, DateInputDirective],
+  imports: [CommonModule, FormsModule, MoneyPipe, ThousandSeparatorDirective],
   templateUrl: './goals.component.html',
   styleUrl: './goals.component.scss'
 })

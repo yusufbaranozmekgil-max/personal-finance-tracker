@@ -9,7 +9,6 @@ import { CategoryService } from '../../core/services/category.service';
 import { AccountService } from '../../core/services/account.service';
 import { SettingsService } from '../../core/services/settings.service';
 import { ThousandSeparatorDirective } from '../../shared/directives/thousand-separator.directive';
-import { DateInputDirective } from '../../shared/directives/date-input.directive';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import { Transaction, PAYMENT_METHODS, TransactionType } from '../../core/models/transaction.model';
 import { CATEGORY_COLORS, CATEGORY_ICONS, CATEGORY_ICON_GROUPS } from '../../core/models/category.model';
@@ -18,7 +17,7 @@ import { MAX_DESCRIPTION_LENGTH, MAX_MONEY_AMOUNT, maxMoneyInTRY, isValidDate } 
 @Component({
   selector: 'app-transactions',
   standalone: true,
-  imports: [CommonModule, FormsModule, MoneyPipe, ThousandSeparatorDirective, DateInputDirective],
+  imports: [CommonModule, FormsModule, MoneyPipe, ThousandSeparatorDirective],
   templateUrl: './transactions.component.html',
   styleUrl: './transactions.component.scss'
 })

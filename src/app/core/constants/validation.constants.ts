@@ -37,7 +37,7 @@ export function isValidDate(dateStr: string | null | undefined): boolean {
   const month = parseInt(monthStr, 10);
   const day = parseInt(dayStr, 10);
 
-  if (year < 1900 || year > 2099) return false;
+  if (year < 1000 || year > 9999) return false;
   if (month < 1 || month > 12) return false;
 
   const daysInMonth = new Date(year, month, 0).getDate();
