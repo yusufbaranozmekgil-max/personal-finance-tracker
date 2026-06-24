@@ -355,8 +355,12 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  onDateStartChange(val: string): void {
+  onDateStartChange(val: string, el?: HTMLInputElement): void {
     this.dashboardPreset.set('custom');
+    if (el && el.validity.badInput) {
+      this.toast.error('Please enter a valid date. The entered date does not exist in the calendar.');
+      return;
+    }
     if (val && !isValidDate(val)) {
       this.toast.error('Please enter a valid date (year 1000-9999).');
       return;
@@ -364,8 +368,12 @@ export class DashboardComponent implements OnInit {
     this.filterDateStart.set(val);
   }
 
-  onDateEndChange(val: string): void {
+  onDateEndChange(val: string, el?: HTMLInputElement): void {
     this.dashboardPreset.set('custom');
+    if (el && el.validity.badInput) {
+      this.toast.error('Please enter a valid date. The entered date does not exist in the calendar.');
+      return;
+    }
     if (val && !isValidDate(val)) {
       this.toast.error('Please enter a valid date (year 1000-9999).');
       return;

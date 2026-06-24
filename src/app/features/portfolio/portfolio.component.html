@@ -362,7 +362,7 @@
                           </label>
                           <label>
                             Date
-                            <input type="date" min="1000-01-01" max="9999-12-31" [(ngModel)]="tradeForm.date">
+                            <input type="date" min="1000-01-01" max="9999-12-31" [(ngModel)]="tradeForm.date" #tradeDateInput>
                           </label>
                           <label>
                             Quantity
@@ -374,7 +374,7 @@
                           </label>
                         </div>
                         <div class="trade-form__actions">
-                          <button class="btn btn--sm btn--primary" (click)="submitTrade(asset)">Save</button>
+                          <button class="btn btn--sm btn--primary" (click)="submitTrade(asset, tradeDateInput)">Save</button>
                           <button class="btn btn--sm btn--ghost" (click)="cancelTradeForm()">Cancel</button>
                         </div>
                       </div>

@@ -456,13 +456,18 @@ export class PortfolioComponent implements OnInit {
     this.tradeForm = this.emptyTradeForm();
   }
 
-  submitTrade(asset: Asset): void {
+  submitTrade(asset: Asset, dateEl?: HTMLInputElement): void {
+    if (dateEl && dateEl.validity.badInput) {
+      this.toast.error('Please enter a valid date. The entered date does not exist in the calendar.');
+      return;
+    }
+
     const quantity = Number(this.tradeForm.quantity);
     const price = Number(this.tradeForm.price);
     const date = this.tradeForm.date;
 
     if (!isValidDate(date)) {
-      this.toast.error('Please enter a valid date (between 1900 and 2099).');
+      this.toast.error('Please enter a valid date (between 1000 and 9999).');
       return;
     }
     if (!quantity || quantity <= 0 || !price || price <= 0) {

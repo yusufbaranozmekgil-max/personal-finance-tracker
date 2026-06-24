@@ -36,7 +36,7 @@
         </div>
         <div class="field">
           <label>Date</label>
-          <input type="date" min="1000-01-01" max="9999-12-31" [(ngModel)]="form.date">
+          <input type="date" min="1000-01-01" max="9999-12-31" [(ngModel)]="form.date" #dateInput>
         </div>
         @if (form.type !== 'transfer') {
           <div class="field">
@@ -92,7 +92,7 @@
         </div>
       </div>
       <div class="form-actions">
-        <button class="btn btn--primary" (click)="submit()">
+        <button class="btn btn--primary" (click)="submit(dateInput)">
           {{ editingId() ? 'Update' : 'Save' }}
         </button>
         <button class="btn btn--ghost" (click)="cancel()">Cancel</button>
@@ -297,7 +297,8 @@
                    min="1000-01-01"
                    max="9999-12-31"
                    [ngModel]="filterDateStart()"
-                   (ngModelChange)="onDateStartChange($event)">
+                   (ngModelChange)="onDateStartChange($event, txStartInput)"
+                   #txStartInput>
           </div>
           <span class="date-separator">→</span>
           <div class="date-field">
@@ -306,7 +307,8 @@
                    min="1000-01-01"
                    max="9999-12-31"
                    [ngModel]="filterDateEnd()"
-                   (ngModelChange)="onDateEndChange($event)">
+                   (ngModelChange)="onDateEndChange($event, txEndInput)"
+                   #txEndInput>
           </div>
         </div>
 

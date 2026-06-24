@@ -89,7 +89,7 @@
         </div>
         <div class="field">
           <label>Deadline *</label>
-          <input type="date" min="1000-01-01" max="9999-12-31" [(ngModel)]="form.deadline">
+          <input type="date" min="1000-01-01" max="9999-12-31" [(ngModel)]="form.deadline" #deadlineInput>
         </div>
         <div class="field">
           <label>Target Amount *</label>
@@ -106,7 +106,7 @@
       </div>
 
       <div class="form-actions">
-        <button class="btn btn--primary" (click)="submit()">
+        <button class="btn btn--primary" (click)="submit(deadlineInput)">
           {{ editingId() ? 'Update' : 'Create' }}
         </button>
         <button class="btn btn--ghost" (click)="cancel()">Cancel</button>

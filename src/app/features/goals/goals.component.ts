@@ -81,18 +81,27 @@ export class GoalsComponent {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  async submit(): Promise<void> {
+  async submit(dateEl?: HTMLInputElement): Promise<void> {
+    if (dateEl && dateEl.validity.badInput) {
+      this.toast.error('Please enter a valid date. The entered date does not exist in the calendar.');
+      return;
+    }
+
     const name = this.form.name.trim();
     const description = this.form.description.trim();
     const targetAmount = Number(this.form.targetAmount);
     const currentAmount = Number(this.form.currentAmount);
 
     if (!name || !targetAmount || !this.form.deadline) {
-      this.toast.error('Please enter a name, target amount, and deadline.');
+      if (!this.form.deadline) {
+        this.toast.error('Please enter a valid deadline date (between 1000 and 9999).');
+      } else {
+        this.toast.error('Please enter a name, target amount, and deadline.');
+      }
       return;
     }
     if (!isValidDate(this.form.deadline)) {
-      this.toast.error('Please enter a valid deadline date (between 1900 and 2099).');
+      this.toast.error('Please enter a valid deadline date (between 1000 and 9999).');
       return;
     }
     if (name.length > this.maxNameLength) {

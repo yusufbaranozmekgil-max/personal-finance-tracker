@@ -557,9 +557,13 @@ export class TransactionsComponent implements OnInit {
     this.filterPreset.set('custom');
   }
 
-  onDateStartChange(val: string): void {
+  onDateStartChange(val: string, el?: HTMLInputElement): void {
     this.resetPagination();
     this.filterPreset.set('custom');
+    if (el && el.validity.badInput) {
+      this.toast.error('Please enter a valid date. The entered date does not exist in the calendar.');
+      return;
+    }
     if (val && !isValidDate(val)) {
       this.toast.error('Please enter a valid date (year 1000-9999).');
       return;
@@ -567,9 +571,13 @@ export class TransactionsComponent implements OnInit {
     this.filterDateStart.set(val);
   }
 
-  onDateEndChange(val: string): void {
+  onDateEndChange(val: string, el?: HTMLInputElement): void {
     this.resetPagination();
     this.filterPreset.set('custom');
+    if (el && el.validity.badInput) {
+      this.toast.error('Please enter a valid date. The entered date does not exist in the calendar.');
+      return;
+    }
     if (val && !isValidDate(val)) {
       this.toast.error('Please enter a valid date (year 1000-9999).');
       return;
@@ -614,13 +622,22 @@ export class TransactionsComponent implements OnInit {
     }
   }
 
-  async submit(): Promise<void> {
+  async submit(dateEl?: HTMLInputElement): Promise<void> {
+    if (dateEl && dateEl.validity.badInput) {
+      this.toast.error('Please enter a valid date. The entered date does not exist in the calendar.');
+      return;
+    }
+
     const amount = Number(this.form.amount);
     const description = this.form.description.trim();
 
     if (this.form.type === 'transfer') {
       if (!amount || !this.form.date || !this.form.transferAccountId || !this.form.accountId) {
-        this.toast.error('Please fill in source account, target account, amount, and date.');
+        if (!this.form.date) {
+          this.toast.error('Please enter a valid date (between 1000 and 9999).');
+        } else {
+          this.toast.error('Please fill in source account, target account, amount, and date.');
+        }
         return;
       }
       if (this.form.accountId === this.form.transferAccountId) {
@@ -631,13 +648,17 @@ export class TransactionsComponent implements OnInit {
       this.form.paymentMethod = 'EFT';
     } else {
       if (!this.form.category || !amount || !this.form.date || !this.form.paymentMethod || !this.form.accountId) {
-        this.toast.error('Please fill in all required fields.');
+        if (!this.form.date) {
+          this.toast.error('Please enter a valid date (between 1000 and 9999).');
+        } else {
+          this.toast.error('Please fill in all required fields.');
+        }
         return;
       }
     }
 
     if (!isValidDate(this.form.date)) {
-      this.toast.error('Please enter a valid date (between 1900 and 2099).');
+      this.toast.error('Please enter a valid date (between 1000 and 9999).');
       return;
     }
     if (amount <= 0) {
