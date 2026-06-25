@@ -1,403 +1,218 @@
-# 💰 Personal Finance & Investment Tracking Application
+# Personal Finance & Investment Tracker
 
-A comprehensive personal finance platform built with Angular 17 + SCSS, featuring **IndexedDB-based offline-first** architecture. From account management to investment portfolios, financial goals to future projections — it runs entirely standalone with no backend. **All data stays on the user's device**, protected with optional AES encryption.
+An offline-first personal finance platform built from scratch with Angular 17.
+Tracks income, expenses, investment portfolios (with FIFO P&L), accounts, and financial goals — entirely in the browser, with AES-encrypted local storage and zero backend.
 
-> **Internship Project** • 100% runs in the browser • No backend • Data stays on device
-
-## 🌐 Live Demo
-
-👉 **[personal-finance-tracker-chi-plum.vercel.app](https://personal-finance-tracker-chi-plum.vercel.app/)**
+🌐 **Live Demo:** [personal-finance-tracker-chi-plum.vercel.app](https://personal-finance-tracker-chi-plum.vercel.app/)
+📁 **Source:** [github.com/yusufbaranozmekgil-max/personal-finance-tracker](https://github.com/yusufbaranozmekgil-max/personal-finance-tracker)
 
 ---
 
-## 🚀 Setup
+## The Problem I Wanted to Solve
+
+I started this project because every finance app I tried demanded one of three uncomfortable things:
+either I had to **upload my salary, rent, and bank balance to a stranger's cloud**, or pay a subscription,
+or live with crippled free-tier limits. The two open-source alternatives I tried either ran a heavy
+self-hosted backend (Postgres + Docker just to log a grocery receipt) or were stuck in 2014 jQuery UI.
+
+The friction I actually had was simple:
+- I wanted to know **where my month went** without spreadsheets.
+- I wanted to **track investments** (crypto, gold, BIST stocks) in the same place as my expenses.
+- I wanted **predictive insight** — "at this rate, will I overshoot the budget?" — not just historical reports.
+- I wanted my data to **stay on my machine**.
+
+So I scoped a build: a single-page app that runs entirely in the browser, stores everything locally,
+and still feels like a commercial SaaS — multi-account, multi-currency, with live exchange rates,
+encrypted backups, and forecasting. The full stack is Angular + IndexedDB. No server, no telemetry,
+no signup. The deployment is a static bundle on Vercel.
+
+---
+
+## Why These Technologies
+
+**Angular 17 with standalone components and signals.** I went with Angular over React for three reasons.
+First, the project has fifteen-plus services with cross-dependencies (transactions feed forecasts,
+accounts derive balances from transactions, the budget alert observes the transaction stream), and
+Angular's dependency injection makes that wiring explicit rather than tribal knowledge in custom
+hooks. Second, Angular 17's signal primitives gave me reactive state without the boilerplate of
+NgRx or the footguns of `useEffect`. Third, the CLI's strict mode caught real bugs at compile time
+that I would have found in production with a looser stack.
+
+**IndexedDB via `localforage`.** Originally I built everything on `localStorage`. It worked, until I
+realized two things: it's synchronous (blocks the UI thread on every write), and it has a hard ~5MB
+ceiling that iOS and Safari can silently delete when disk is tight. For a finance app that should
+survive years of records, that's a recall-tier defect. I migrated the entire storage layer to
+IndexedDB through `localforage`, which gives me GB-scale capacity and a Promise-based API. The
+non-obvious part: I wrote a custom `StorageService` that keeps an in-memory cache, so existing
+services that expected synchronous reads (`getItemSync`) didn't need to be rewritten. The cache is
+hydrated by an `APP_INITIALIZER` that blocks bootstrap until IndexedDB is ready (~50ms).
+
+**Chart.js over D3.** I needed donut, bar, and line charts with drilldown click handlers. D3 would
+have been more flexible but I'd have spent a week on tooltip and legend implementations Chart.js
+gives for free. The tradeoff is harder customization later, but for this scope it was right.
+
+**SCSS with CSS custom properties.** I wanted a light/dark theme that switches instantly without
+recompiling. The standard SCSS approach (one stylesheet per theme) doesn't allow runtime switching.
+My solution: every color in `_variables.scss` is now a `var(--color-bg)` reference. The actual
+hex values live in `:root` and `[data-theme='light']` blocks. A `ThemeService` toggles the
+`data-theme` attribute on `<html>`, and every component re-renders instantly through the cascade.
+Component SCSS files reference `$color-bg` exactly as before — they don't know themes exist.
+
+**`CryptoJS` for the local vault.** This wasn't planned. I was 80% through the build when I asked
+myself: "if someone opens this on a shared laptop, can they read my salary?" The answer was yes
+because `localStorage` and IndexedDB are both visible in DevTools. I added an opt-in encryption
+layer where the user sets a master password, every record is encrypted with AES-256 before being
+written to disk, and a lock screen appears on every page load.
+
+---
+
+## The Hard Problems and How I Solved Them
+
+### Forecasting without overfitting to recent noise
+
+The "Financial Future Simulator" predicts whether you'll hit your laptop savings goal on time and
+whether you'll overshoot the monthly budget. My first version used only the current month's data —
+which meant a single bonus paycheck made the forecast wildly optimistic.
+
+The fix was a three-month rolling average of net savings (income minus expenses, weighted equally
+across months that actually contain data). For budget overrun, I project the end-of-month total
+using current daily-average spending × remaining days. If the user's been spending heavily for ten
+days but historically does so only mid-month, the prediction will be too high — but that's the
+*right* error to make. A finance app should warn you early, not reassure you that everything is fine
+because the bills don't usually arrive until day twenty.
+
+### FIFO profit/loss for the investment portfolio
+
+For the portfolio I needed realized vs. unrealized P&L per asset across multiple buys and sells —
+classic FIFO accounting. If you bought 1 BTC at $40k, then 1 BTC at $50k, then sold 1 BTC at $60k,
+the realized profit is $20k (against the older lot) and your remaining cost basis is $50k.
+
+I implemented this as a pure function on the asset's `trades[]` array. Buys push onto a queue with
+remaining quantity, sells consume the queue head, and realized profit is computed against the
+consumed lot's price. The result is a derived value that's always consistent with the trade history —
+deleting a trade automatically recalculates everything downstream. The whole engine is one file
+and ~80 lines.
+
+### Cross-module triggers without coupling
+
+When you record buying $10k of gold in the portfolio, that's also $10k leaving your account. Three
+options here: hard-couple the portfolio service to the transaction service (rigid), event bus
+(observable spaghetti), or opt-in trigger via the form (transparent).
+
+I went with option three. The "Add Asset" form has a checkbox "Record purchase as an expense and
+deduct from balance." If checked, the portfolio service emits a transaction in the "Investment"
+category against the user's default account. Users see the link being created. There's no hidden
+state synchronization, and removing one of the two records doesn't break the other — they're
+independent. Goals have the same pattern for deposits.
+
+### Live currency rates that survive a flaky connection
+
+I fetch USD/EUR rates from `api.frankfurter.app` (free, no API key, ECB-sourced). Crypto and gold
+come from Binance. BIST stocks need a user-supplied Twelve Data / Alpha Vantage / Finnhub key
+because no free CORS-enabled BIST feed exists. The challenge was that any of these APIs can be
+down, rate-limited, or blocked.
+
+I built a three-tier fallback (Frankfurter → open.er-api.com → exchangerate.host) and cached every
+successful fetch with its timestamp. If all three fail, the cached value loads and a banner appears:
+"⚠ Offline — rates from 2 hours ago." The app stays functional, the user just sees stale data with
+honest framing. This was probably the single highest-impact decision for perceived reliability.
+
+### Bank statement import without a fragile parser
+
+Users wanted to bulk-import past expenses from CSV/XLSX. The naive approach (require exact column
+names) doesn't survive contact with five different banks' export formats. My solution: a column
+detection function with a dictionary of synonyms. "Tarih" / "Date" / "Transaction Date" all map to
+the date column; "Tutar" / "Amount" / "Borç" / "Alacak" all map to amount (with debit/credit
+inferring the type). The import goes through a preview modal that shows three counts (valid /
+invalid / duplicate) before any data is committed. Duplicates are detected by hashing `date + amount
++ description`. Unknown categories and accounts are auto-created during commit, not silently
+discarded.
+
+### The thousand-separator directive that broke validation
+
+This sounds trivial. I wanted users to see `1.000.000` while typing instead of `1000000`. HTML
+`<input type="number">` doesn't support thousand separators, so I switched the inputs to
+`type="text"` and wrote a directive that reformats on every keystroke. Works great — except suddenly
+the "max 1 trillion" check happens only on submit, and users were typing 200-digit numbers that
+overflowed JavaScript's Number type into `1.111e+154`.
+
+The fix: the directive now accepts an `[appMax]` input. On every keystroke, it parses the value,
+checks against the cap, and if exceeded, **reverts to the last valid state** instead of accepting
+the keystroke. The user literally cannot type past the limit. I also tied the max to the USD
+exchange rate (1 trillion USD × current rate in TRY), so the cap is always meaningful regardless of
+which currency the user picked.
+
+### Recurring transactions without time-bomb bugs
+
+Rent and salary repeat monthly. The naive approach (a cron-like background loop) doesn't work in a
+SPA — there's no background, the app only runs while the user has the tab open. My solution: an
+`AutoResetService` that runs once on every app boot. It checks if today is past the configured
+reset day AND if it hasn't already run this month, then it (1) deletes one-time transactions older
+than the reset, (2) creates copies of recurring transactions dated today. The
+`settings.lastResetMonth` field guarantees it runs exactly once per month, no matter how many times
+the user opens the app.
+
+---
+
+## Architecture Notes for the Curious
+
+- **State**: Each domain (`TransactionService`, `PortfolioService`, `AccountService`, etc.) owns a
+  signal. Derived values are `computed()` — there's no manual subscription management anywhere.
+- **Routing**: Five lazy-loaded standalone routes. Total initial bundle is ~250KB gzipped.
+- **Forms**: Template-driven with `[(ngModel)]`. Reactive forms would have been over-engineered for
+  fields that map 1:1 to a value.
+- **Testing**: 11 Jasmine specs covering the import parser (hardest logic) and the FIFO engine
+  (most error-prone). Components are visually verified during development.
+- **Build**: `npm run build` produces a static bundle to `dist/finans-takip/browser/`. Vercel
+  rebuilds on every push to `main`. The `vercel.json` rewrites all paths to `index.html` so client-
+  side routing works on direct URLs.
+
+---
+
+## What I Would Do Differently Next Time
+
+- **Validation at the model layer, not the form.** Right now validation is duplicated between the
+  form's `submit()` and the service. A class-based model with built-in `validate()` would
+  consolidate it.
+- **Component test coverage**. The services are tested, but the components only got smoke tests.
+  Cypress for end-to-end would catch the kind of UX regressions I found by manual testing.
+- **Sync, not just backup**. JSON export/import is good, but real cross-device sync (Google Drive
+  end-to-end encrypted, which I have wired but didn't fully ship UX-wise) is the natural next step.
+
+---
+
+## Try It
 
 ```bash
-git clone https://github.com/<username>/finans-takip.git
-cd finans-takip
+git clone https://github.com/yusufbaranozmekgil-max/personal-finance-tracker.git
+cd personal-finance-tracker
 npm install
 npm start
 ```
 
-Open in browser: **http://localhost:4200**
-
-On first launch, try it out with sample data using **Settings → 🧪 Load Demo Data**.
+Open `http://localhost:4200`. Use **Settings → Load Demo Data** for an instant six-month dataset.
 
 ---
 
-## 🌟 Latest Professional-Grade Updates
+## Feature Inventory (Reference)
 
-Architectural and functional innovations integrated today to bring the application to a commercial, professional SaaS level:
+For the recruiter scanning quickly:
 
-1. **💾 Migration from localStorage to IndexedDB:** Replaced blocking, 5MB-limited `localStorage` with asynchronous, high-capacity **IndexedDB** (`localforage` wrapper). Migration mechanism preserves existing browser data.
-2. **🔒 Session-Based Vault (Encryption):** All sensitive data encrypted at rest using `CryptoJS` (AES-256). Password kept only in-memory; session auto-locks when tab is closed or backgrounded. Covers all data including `Account` and `Settings`.
-3. **🏦 Accounts / Vaults Module:** Users can define up to 10 checking, cash, credit card, or savings accounts. Income/expense transactions are linked to specific accounts for per-account balance tracking.
-4. **🔮 Financial Future Projection Simulator:** Projects financial goal completion dates and month-end budget overrun estimates based on the last 3 months' savings rate.
-5. **📥 Bank Statement Import Engine:** Bulk statement import with flexible column mapping, duplicate detection, and preview table.
-6. **🖨 Reporting System:** Multi-sheet Excel reports (Transactions, Portfolio, Goals, Summary) and PDF dashboard screenshot exports.
-7. **📈 FIFO Portfolio Engine & Trade Tracking:** Trade history for assets, FIFO-based realized/unrealized profit/loss calculations, and hybrid page views.
-8. **🌓 Theme Switcher (Dark / Light):** Dynamic theme integration using CSS Custom Properties with instant switching and preference persistence.
-9. **🎨 Professional Category Customization:** 12 corporate color palettes and 48 grouped icon selectors for categories.
-10. **📶 Offline Resilience (Cache Layer):** Cache layer for live rates and crypto prices. When internet disconnects, last saved data loads with timestamps instead of throwing errors.
-11. **☁️ Zero-Knowledge Cloud Sync:** Integrates user's own Google Drive via OAuth2, encrypts data with AES-256 before uploading, ensuring 100% secure cross-device data transfer.
-12. **📈 Portfolio Heatmap (Treemap):** Finviz/TradingView-standard heatmap with segmented control. Asset sizes represent portfolio weights, colors represent profit/loss performance with reactive shading.
-13. **📊 Historical Net Worth Growth Trend:** Tracks total wealth (Cash + Portfolio) growth with reactive daily snapshots and retrospective reconstruction algorithm displayed in a line chart.
-14. **⇆ Inter-Account Transfer Module:** Budget-neutral transfers between accounts with dual-directional balance updates, custom validation, and dedicated transfer listing tab.
+| Area | Capabilities |
+|------|-------------|
+| **Transactions** | CRUD, monthly recurring flag, accordion view grouped by category, flat list with sorting + pagination, three accordion filters (categories, date range, summary), drilldown from charts |
+| **Portfolio** | Custom asset types, FIFO P&L engine, trade history, live prices (Binance for crypto + gold + silver, Twelve Data / Alpha Vantage / Finnhub for BIST stocks via user API key), heatmap view, multi-currency support |
+| **Accounts** | Up to 10 accounts across 6 types (cash, bank, credit card, savings, investment, other), per-account balance, dedicated transfer module that's budget-neutral |
+| **Goals** | Up to 8 goals, status filtering (active / completed / overdue), inline savings deposit, completion celebration |
+| **Forecasting** | Monthly average savings rate, budget overrun projection, per-goal completion date estimate with "X days early / late" assessment |
+| **Reports** | CSV export, 4-sheet Excel report (transactions / portfolio / goals / summary), PDF dashboard snapshot |
+| **Security** | Optional AES-256 vault with master password, session-lock on tab background, lock-screen on app load |
+| **Data Portability** | Full JSON backup/restore, bank statement import (XLSX/CSV) with flexible column mapping + duplicate detection |
+| **UI** | Light/dark theme via CSS custom properties, responsive across desktop/tablet/mobile, accordion-heavy info architecture to manage density |
+| **Storage** | IndexedDB via localforage, ~GB capacity, in-memory cache for legacy sync access, one-time migration from localStorage |
 
 ---
 
-## 🛠 Technology Stack
+## Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | **Angular 17** (Standalone Components + Signals) |
-| Styling | **SCSS** + CSS Custom Properties (light/dark theme) |
-| State | **Angular Signals** (reactive services) |
-| Database | **IndexedDB** (via `localforage`, ~GB capacity) |
-| Encryption | **CryptoJS** (AES — local vault) |
-| Charts | **Chart.js 4.5** (doughnut, bar, line) — drilldown support |
-| HTTP | Angular HttpClient (Frankfurter, Binance, Twelve Data) |
-| Reports | **xlsx** (Excel), **jspdf + html2canvas** (PDF) |
-
----
-
-## ✨ Modules
-
-### 📊 Dashboard
-- 6 summary cards (income, expense, net balance, portfolio, net worth, this month's spending)
-- **Monthly Budget Panel** — limit/spent/remaining + 3-color status + shimmer progress bar
-- 4 analysis cards (top spending category, daily average + month-end estimate, highest expense/income)
-- **2×2 Accordion grid (7 sections):**
-  - 🔮 **Financial Future Simulator** ⭐ (AI badge)
-  - 🏦 Account Balances
-  - 📊 Category-Based Spending Summary
-  - 📋 Recent Transactions
-  - 🍩 Category Distribution (drilldown)
-  - 📊 Last 6 Months Income/Expense (drilldown)
-  - 💼 Portfolio Type Distribution (drilldown)
-  - 📈 Historical Net Worth Trend (drilldown) ⭐
-
-### 🔮 Financial Future Simulator
-- **Automatically calculates** the last 3 months' average savings rate
-- **Budget Projection:** *"At your current pace, you'll exceed the limit by $2,300 by month end"*
-- **Goal Projections:** Estimated completion date for each goal
-  - 🚀 *"You'll reach this goal 45 days ahead of schedule"*
-  - ⚠ *"You'll be 25 days late. You need to increase your savings rate by 32%"*
-  - ❌ *"You need to save $5,000/month to reach this goal"*
-
-### 💸 Transactions
-- Full CRUD + boundary validations + **🔄 Monthly Recurring** option
-- **🏦 Account Selector** (each transaction is linked to an account)
-- **3 Accordion Filters:** 🏷️ Categories · 📅 Date Range (This Month, Last 7/30) · 📊 Summary View
-- **2 Views:** 📂 Category accordion · ☰ Flat list
-- Type tabs + 4 sort options + pagination
-
-### 🏦 Accounts (Vaults)
-- 6 account types: 💵 Cash · 🏦 Bank · 💳 Credit Card · 🐖 Savings · 📈 Investment · 📋 Other
-- 8 ready-made templates (Garanti, Ziraat, Yapi Kredi, Is Bankasi…)
-- **Real-time balance for each account** (opening balance + related income/expenses)
-- Total balance card + sectoral color coding
-
-### ⇆ Inter-Account Transfers
-- **Dual-Directional Balance Updates:** Transfers deducted from source, added to target. Does not affect global income/expense budget (neutral).
-- **Dynamic Form Controls:** When transfer type is selected, category and payment method auto-lock. Source and target account selectors appear. Same-account selection is prevented.
-- **Transfer Listing Tab:** Dedicated "Transfers" tab on the transactions page to view all transfers.
-
-### 💼 Portfolio & Investment Tracking
-- **Hybrid Page View:** Switch between **Holdings** and **Trade History** views via top tabs.
-- **FIFO (First-In, First-Out) P&L Engine:** Matches trades chronologically, deducting from oldest purchase lots.
-- **Detailed Asset Cards:** Quantity, average cost (FIFO), realized and unrealized profit/loss indicators for each asset.
-- **Dynamic Buy/Sell Recording:** Add new trades directly from asset cards, delete past trades with one click.
-- **3 Summary Cards:** Portfolio Value / Cost / FIFO Realized P&L.
-- **Accordion Categories** (💎 Crypto · 📈 Stocks · 🪙 Gold · 💵 Foreign Currency · 📊 Funds · 🎯 Other)
-- **🔴 Live Pricing:**
-  - **Crypto** (Binance) — BTC, ETH, BNB, SOL, XRP, ADA, DOGE, AVAX, DOT, LINK, LTC, TRX, TON
-  - **Gram Gold** (Binance PAXG / 31.1035 grams)
-  - **Silver** (XAGUSDT)
-  - **BIST Stocks** — via user API key (Twelve Data / Alpha Vantage / Finnhub)
-- Automatic P&L calculator (displayed with FIFO, cost, and value formulas)
-- **📈 Portfolio Heatmap (Treemap):** Segmented control toggle between list view and performance map. Asset sizes scale by portfolio weight, colors react to performance (green for profit, red tones for loss). Hover tooltips show net P&L, cost, and value details.
-
-### 🎯 Goals
-- Max 8 goals, 8 preset templates (Laptop, Erasmus, Emergency Fund, Vacation…)
-- 4 status tabs: All / 🎯 Active / ✓ Completed / ⚠ Expired
-- Shimmer progress bar + days remaining + quick deposit
-- Celebration toast 🎉 upon completion
-
-### ⚙️ Settings (Modular Cards)
-- 🌓 **Theme** — Dark ↔ Light (CSS variables, instant switch)
-- 💱 **Currency** — TRY/USD/EUR (auto-converts everywhere)
-- 🎯 **Monthly Budget Limit**
-- 📈 **Exchange Rates** — manual or **3 fallback APIs** (Frankfurter → open.er-api → exchangerate.host)
-- 🔑 **BIST/Stock API** — provider selector + key input + test button
-- 🔄 **Monthly Reset** — reset day + manual trigger
-- 📤 **Reports** — CSV / Excel (4 sheets) / PDF (dashboard screenshot)
-- 📥 **Statement / Excel Import** — bank statement import (preview + duplicate detection)
-- 💾 **JSON Backup** — Export/Import (overwrites existing data)
-- 🔒 **Vault (AES Encryption)** — set password, lock screen on startup
-- ☁️ **Cloud Sync (Google Drive)** — Serverless data sync via OAuth2. Encrypts data with user's Vault password in-browser (Zero-Knowledge) before uploading to Google Drive.
-- 💾 **Storage Status** — IndexedDB usage/quota indicator
-- 🧪 **Demo Data** — 28 transactions, 13 assets, 3 accounts, 3 goals
-- 🗑 **Reset All Data**
-
----
-
-## 🎨 Professional Category Customization
-- Per category: **icon + color + name**
-- **12 financial color palettes** (saturated, corporate tones)
-- **48 icons — categorized in 8 groups** (Finance, Living, Transport, Bills, Health, Education, Entertainment, Other)
-- Live preview pill — updates instantly while typing/selecting
-- Dashboard charts use each category's own color
-
----
-
-## 🔗 Cross-Module Integration
-
-- **Portfolio → Transactions:** "Record purchase as expense" option when adding an asset → auto-creates expense in "Investment" category
-- **Goals → Transactions:** Option to deduct from balance when adding deposits
-- **Drilldown Charts:** Click on donut/bar/line chart segments to navigate to filtered Transactions/Portfolio page
-
----
-
-## 🔔 Smart Notifications & UX
-
-| Component | Description |
-|-----------|-------------|
-| **Toast** | Top-right, 2.8s slide-in (success/error/info/warning) |
-| **Confirm Dialog** | Modern modal, backdrop blur (danger/warning/info variants) |
-| **Budget Banner** | Global sticky — 80% yellow, 90% orange, 100%+ red (pulse animation) |
-| **Offline Banner** | Appears on top bar when internet disconnects, cache timestamped |
-| **Lock Screen** | Full overlay on startup when Vault is active, shake animation on wrong password |
-
----
-
-## 🔄 Monthly Auto-Reset
-
-Check the **"🔄 Monthly Recurring"** box when adding transactions (for rent, salary, bills).
-When the **reset day** set in Settings arrives on app launch:
-
-- 🗑 **One-time transactions are permanently deleted** (regardless of date)
-- 🔄 **Monthly-flagged transactions** are recreated for the current month with today's date
-- Runs only once per month
-
----
-
-## 💱 Currency & Live Data
-
-All amounts are stored in **TRY** and converted via `MoneyPipe` to the selected currency. APIs:
-
-| Service | URL | API Key | Coverage |
-|---------|-----|---------|----------|
-| Frankfurter | `api.frankfurter.app` | None | USD/EUR rates (ECB) |
-| Binance | `api.binance.com` | None | Crypto + PAXG (gold) + XAG (silver) |
-| Twelve Data | `api.twelvedata.com` | Yes (free 800/day) | BIST stocks (`.IST`) |
-| Alpha Vantage | `alphavantage.co` | Yes (free 25/day) | BIST stocks |
-| Finnhub | `finnhub.io` | Yes | International stocks |
-
-On API failure: cache fallback + last update timestamp notification.
-
----
-
-## 🔒 Data Security
-
-### JSON Backup
-- **Export:** All data in a single `finance-backup-YYYY-MM-DD.json` file (transactions, assets, goals, accounts, categories, settings)
-- **Import:** Select file, confirm, overwrite
-- Versioned format (`version: 1`)
-
-### Bank Statement / Excel Import
-- **Download template Excel** or upload your bank's statement
-- **Flexible column mapping** — Date, Amount/Debit/Credit, Category, Description
-- Automatic duplicate detection (date + amount + description hash)
-- New categories and accounts created automatically
-- **Preview modal** — status of each row (✓ OK / ⚠ Duplicate / ✕ Error)
-
-### Vault (AES-256)
-- User password → `CryptoJS.AES.encrypt(JSON.stringify(allData), password)`
-- IndexedDB keys wrapped into single `finans_vault` blob
-- On startup: **lock screen** → correct password → auto decrypt + reload services
-- Probe validation (`__probe: "OK_FINANS_VAULT_v1"`) for wrong password detection
-- Emergency reset link (with data loss warning)
-
----
-
-## 💾 Storage: IndexedDB
-
-Uses **IndexedDB** instead of `localStorage` (5MB limit, blocks UI, iOS silently deletes):
-
-- **Wrapper:** `StorageService` (localforage-based)
-- **Sync API:** `getItemSync/setItemSync` — in-memory cache keeps services immutable
-- **Async API:** `getItem/setItem` — for new code
-- **APP_INITIALIZER** prepares cache before boot (~50ms)
-- **Auto-migration:** On first launch, migrates `finans_*` keys from `localStorage` to IndexedDB
-
----
-
-## 📁 Project Structure
-
-```
-src/
-├── app/
-│   ├── core/
-│   │   ├── constants/         # validation.constants.ts
-│   │   ├── models/            # transaction, asset, goal, account, category
-│   │   └── services/          # 15+ services
-│   │       ├── transaction.service.ts
-│   │       ├── portfolio.service.ts
-│   │       ├── goal.service.ts
-│   │       ├── account.service.ts
-│   │       ├── category.service.ts       (rich category objects)
-│   │       ├── settings.service.ts
-│   │       ├── theme.service.ts
-│   │       ├── toast.service.ts
-│   │       ├── confirm.service.ts
-│   │       ├── budget-alert.service.ts
-│   │       ├── live-price.service.ts
-│   │       ├── currency-rate.service.ts
-│   │       ├── storage.service.ts        (IndexedDB wrapper)
-│   │       ├── encryption.service.ts     (AES vault)
-│   │       ├── auto-reset.service.ts
-│   │       ├── data.service.ts
-│   │       ├── connection.service.ts
-│   │       ├── report.service.ts         (CSV/Excel/PDF)
-│   │       ├── import.service.ts         (Bank statement import)
-│   │       └── forecast.service.ts       (Projection simulator)
-│   ├── features/
-│   │   ├── dashboard/         # 7 accordion sections + 4 analysis cards
-│   │   ├── transactions/      # CRUD + 3 accordion filters + 2 views
-│   │   ├── portfolio/         # Accordion categories + live pricing
-│   │   ├── goals/             # 4 status tabs + progress bar
-│   │   ├── accounts/          # Account management
-│   │   └── settings/          # 12 setting cards
-│   ├── shared/
-│   │   ├── components/        # toast, confirm-dialog, budget-banner,
-│   │   │                      # offline-banner, lock-screen
-│   │   └── pipes/             # money.pipe.ts
-│   ├── app.component.*
-│   ├── app.config.ts          # Router + HttpClient + APP_INITIALIZER
-│   └── app.routes.ts
-└── styles/
-    ├── _variables.scss        # CSS custom properties (light/dark)
-    └── _mixins.scss           # card, btn, input, flex
-```
-
----
-
-## 🛡 Validation Limits
-
-| Field | Limit |
-|-------|-------|
-| Name (category/goal/asset/account) | 30 characters |
-| Description | 50 characters |
-| Category name | 20 characters |
-| Amount | 1 trillion |
-| Category count (income/expense/asset) | 20 per type |
-| Account count | 10 |
-| Goal count | 8 |
-| Reset day | 1-28 |
-| Vault password | min 4 characters |
-
----
-
-## 📱 Responsive Design
-
-- **Desktop (>900px):** 2-column grid
-- **Tablet (600-900px):** Collapsed grid
-- **Mobile (<600px):** Single column, full-width buttons, card-format tables
-
----
-
-## 🎨 Theme
-
-Dark / Light. CSS variables defined with `:root` + `[data-theme='light']`,
-SCSS variables use `var(--...)` proxy. Component files work theme-agnostically.
-
-```scss
-$color-bg:        var(--color-bg);
-$color-primary:   var(--color-primary);
-// ...
-```
-
----
-
-## 📜 Commands
-
-```bash
-npm start          # Development server — http://localhost:4200
-npm run build      # Production build (dist/finans-takip)
-npm run watch      # Continuous dev mode compilation
-npm test           # Jasmine + Karma tests
-```
-
----
-
-## 🧪 Demo Content
-
-`Settings → 🧪 Load Demo Data`:
-
-- **4 accounts** — Cash Wallet, Vakifbank Military Salary Account, Ziraat Bank Credit Card, OYAK Savings Account
-- **30+ transactions** — Military Salary (recurring), Field Exercise Allowance, Housing Rent (recurring), Bills (recurring), Food, Transportation, Shopping, Health, Education, inter-account transfers (OYAK contributions, credit card payments)
-- **3 assets** — Aselsan (Stock), Gram Gold (Gold), US Dollar (Foreign Currency)
-- **3 goals** — Tactical & Camping Equipment, New Car Down Payment, Private Pension Plan
-- **Budget** — $30,000/month
-
----
-
-## 🏆 Professional Feature Showcase
-
-| # | Feature | Detail |
-|---|---------|--------|
-| 1 | **IndexedDB Storage** | Migration from localStorage to GB-scale database |
-| 2 | **AES Vault** | Local data encryption + lock screen |
-| 3 | **JSON Backup** | One-click export/import |
-| 4 | **Bank Statement Import** | Excel/CSV → smart column mapping + preview |
-| 5 | **PDF/Excel Reports** | Dashboard screenshot + 4-sheet workbook |
-| 6 | **Multi-API Live Pricing** | Binance + Twelve Data + Frankfurter + 3 fallbacks |
-| 7 | **AES + IndexedDB** | At-rest encryption |
-| 8 | **Drilldown Charts** | Click chart segment → navigate to filtered page |
-| 9 | **Cross-Module Triggers** | Portfolio purchase → auto expense |
-| 10 | **Forecast Engine** | Savings rate + budget + goal projection |
-| 11 | **Recurring Engine** | Monthly recurring transactions auto-renew |
-| 12 | **Theme System** | CSS Custom Properties for light/dark |
-| 13 | **Offline Mode** | Cache fallback when API is down + banner |
-| 14 | **Category Customization** | Icon + color + group palette |
-| 15 | **Account (Vault) Management** | 6 types, real-time balance calculation |
-| 16 | **Zero-Knowledge Cloud Sync** | Google Drive OAuth2 + AES encrypted sync |
-| 17 | **Portfolio Heatmap** | Dynamic treemap by asset weight and performance |
-| 18 | **Net Worth History** | 6-month retrospective reconstruction growth chart |
-| 19 | **Inter-Account Transfers** | Neutral fund transfer flow with dual-directional balance updates and Excel/CSV integration |
-
----
-
-## 🔮 Future Development
-
-- [x] Zero-Knowledge Cloud Sync (Google Drive OAuth2)
-- [ ] PWA (offline support + install)
-- [ ] Multi-account / user profiles
-- [ ] Web Worker for large report generation
-- [x] Inter-account transfer transactions
-- [ ] Stock market news (integrated RSS)
-- [ ] Investment Analysis Module (Portfolio Sharpe Ratio and beta coefficient calculation)
-- [ ] Automatic Open Banking Integration (PSD2 statement import)
-- [ ] Web Push / Email Notifications for Budget Limit Violations
-- [ ] ONNX/WebGPU-Based Local AI Portfolio Allocation Recommender
-
----
-
-## 📝 License
-
-Educational internship project — MIT.
-
----
-
-## 🙏 Acknowledgments
-
-- [Angular](https://angular.io/) — Framework
-- [Chart.js](https://www.chartjs.org/) — Charts
-- [localForage](https://localforage.github.io/localForage/) — IndexedDB
-- [CryptoJS](https://github.com/brix/crypto-js) — AES encryption
-- [SheetJS](https://sheetjs.com/) — Excel read/write
-- [jsPDF](https://github.com/parallax/jsPDF) — PDF generation
-- [Frankfurter](https://www.frankfurter.app/) — Exchange rate data
-- [Binance Public API](https://github.com/binance/binance-spot-api-docs) — Crypto/gold
-- [Twelve Data](https://twelvedata.com/) — BIST stocks
+Angular 17 · TypeScript · SCSS · Chart.js · CryptoJS · localforage · xlsx · jspdf + html2canvas · Vercel
