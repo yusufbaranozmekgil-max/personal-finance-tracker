@@ -25,6 +25,7 @@
   box-shadow: 0 1px 2px oklch(20% 0.02 165 / 0.12), 0 8px 28px -12px oklch(20% 0.02 165 / 0.25);
   padding-left: 3.2rem;
   view-transition-name: page;
+  z-index: 1;
 }
 
 /* Red margin line, the spine of every ruled insert. */
@@ -49,9 +50,10 @@
 .tab {
   display: grid;
   place-items: center;
-  width: 2.7rem;
+  width: 3.4rem;
   min-height: 7.25rem;
-  padding: 0.75rem 0;
+  transform: translateX(-0.7rem);
+  padding: 0.75rem 0 0.75rem 0.7rem;
   writing-mode: vertical-rl;
   border-radius: 0 6px 6px 0;
   background: var(--tab-bg);
@@ -63,12 +65,11 @@
   text-transform: uppercase;
   text-decoration: none;
   box-shadow: inset 4px 0 6px -4px oklch(20% 0.02 165 / 0.35);
-  transition: width 220ms var(--ease-out), box-shadow 220ms;
-  &:hover { width: 3rem; }
+  transition: transform 220ms var(--ease-out), box-shadow 220ms;
+  &:hover { transform: translateX(-0.35rem); }
   &.active {
-    width: 3.4rem;
+    transform: translateX(-1px);
     box-shadow: none;
-    margin-left: -1px;
   }
   &:focus-visible { outline-offset: -4px; outline-color: var(--tab-ink); }
 }
@@ -145,12 +146,13 @@
     min-height: 3.1rem;
     padding: 0 0.2rem;
     writing-mode: horizontal-tb;
+    transform: none;
     border-radius: 6px 6px 0 0;
     font-size: 0.82rem;
     letter-spacing: 0.04em;
     box-shadow: inset 0 4px 6px -4px oklch(20% 0.02 165 / 0.35);
-    &:hover { width: auto; }
-    &.active { width: auto; min-height: 3.6rem; margin-left: 0; }
+    &:hover { transform: none; }
+    &.active { transform: none; min-height: 3.6rem; }
   }
   .lock-now { position: fixed; top: 0.6rem; right: 0.6rem; margin: 0; width: 2.5rem; height: 2.5rem; z-index: 11; }
 }
