@@ -188,7 +188,7 @@ input[type='date']::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: po
   &:disabled { opacity: 0.45; cursor: not-allowed; }
   &.ghost { background: transparent; color: var(--ink); }
   &.ghost:hover:not(:disabled) { background: var(--paper-sunk); }
-  &.danger { background: var(--alert); border-color: var(--alert); color: oklch(99% 0 0); }
+  &.danger { background: var(--alert); border-color: var(--alert); color: var(--paper); }
   &.small { min-height: 2rem; padding: 0.2rem 0.65rem; font-size: 0.9rem; }
   svg { width: 1.1em; height: 1.1em; flex: none; }
 }

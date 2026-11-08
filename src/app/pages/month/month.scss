@@ -72,7 +72,7 @@
     &:focus { outline: none; }
     &::placeholder { color: var(--ink-3); }
   }
-  &:focus-within { color: var(--ink); box-shadow: 0 2px 0 var(--focus); }
+  &:focus-within { color: var(--ink); border-bottom: 2px solid var(--focus); margin-bottom: -2px; }
 }
 
 /* Ruled rows: day in the margin column, what, flags, amount. */

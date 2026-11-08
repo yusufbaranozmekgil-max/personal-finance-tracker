@@ -46,7 +46,6 @@
 
 @media (max-width: 640px) {
   .cover { padding: 0; place-items: stretch; }
-  .first-page { box-shadow: none; }
   .title-block, .steps, .facts { padding-inline: 1.1rem; }
   .facts { grid-template-columns: 1fr; gap: 1rem; }
   .actions .btn { flex: 1 1 100%; }
