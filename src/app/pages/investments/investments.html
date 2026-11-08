@@ -1,0 +1,167 @@
+<header class="page-head" data-tab="invest">
+  <div>
+    <h1>Investments</h1>
+    <p class="sub">Worth {{ totals().value.value | money: base() }} · open gain {{ totals().unrealized.value | money: base() : true }} · taken {{ totals().realized.value | money: base() : true }}</p>
+  </div>
+  <div class="head-actions no-print">
+    @if (anyLive()) {
+      <button class="btn small ghost head-btn" type="button" (click)="refreshAll()" [disabled]="prices.busy()"><app-icon name="refresh" /> Prices</button>
+    }
+    <button class="btn small ghost head-btn" type="button" (click)="newHolding()"><app-icon name="plus" /> New holding</button>
+  </div>
+</header>
+
+@if (totals().value.missing.length) {
+  <p class="note-line small">{{ totals().value.missing.join(', ') }} left out of the totals until exchange rates load.</p>
+}
+
+@if (draft(); as d) {
+  @if (!d.id) {
+    <section aria-labelledby="new-h">
+      <div class="ruled-head"><h2 id="new-h">New holding</h2><span class="aside">with your first purchase</span></div>
+      <form class="form-row" (submit)="saveHolding($event)">
+        <label class="field wide"><span>Name</span>
+          <input class="input" maxlength="60" placeholder="e.g. Bitcoin" [value]="d.name" (input)="patch({ name: $any($event.target).value })" />
+        </label>
+        <label class="field"><span>Symbol</span>
+          <input class="input" maxlength="20" placeholder="BTC" [value]="d.symbol" (input)="patch({ symbol: $any($event.target).value })" />
+        </label>
+        <label class="field"><span>Kind</span>
+          <select class="select" (change)="patch({ kind: $any($event.target).value })">
+            @for (k of kinds; track k.value) { <option [value]="k.value" [selected]="k.value === d.kind">{{ k.label }}</option> }
+          </select>
+        </label>
+        <label class="field"><span>Priced in</span>
+          <select class="select" (change)="patch({ currency: $any($event.target).value })">
+            @for (c of currencies; track c) { <option [value]="c" [selected]="c === d.currency">{{ c }}</option> }
+          </select>
+        </label>
+        <label class="field"><span>Units bought</span>
+          <input class="input" inputmode="decimal" placeholder="0.05" [value]="d.quantity" (input)="patch({ quantity: $any($event.target).value })" />
+        </label>
+        <label class="field"><span>Price per unit</span>
+          <input class="input" inputmode="decimal" [value]="d.price" (input)="patch({ price: $any($event.target).value })" />
+        </label>
+        <label class="field"><span>Bought on</span>
+          <input class="input" type="date" min="1900-01-01" max="2100-12-31" [value]="d.date" (change)="patch({ date: $any($event.target).value })" />
+        </label>
+        <div class="actions">
+          <button class="btn small" type="submit">Add holding</button>
+          <button class="btn small ghost" type="button" (click)="draft.set(null)">Cancel</button>
+        </div>
+        @if (draftError(); as e) { <p class="error-text" role="alert">{{ e }}</p> }
+        <p class="hint">Live prices work for common crypto symbols (BTC, ETH, SOL…) and gold (XAU per ounce, GAU per gram). Stocks and funds need a price key in Settings; otherwise you type the price in.</p>
+      </form>
+    </section>
+  }
+}
+
+<div class="ruled-head"><h2>Holdings</h2><span class="aside">value · open gain</span></div>
+<ul class="holdings">
+  @for (r of rows(); track r.h.id) {
+    <li class="holding" [class.open]="open() === r.h.id">
+      <button class="row" type="button" (click)="toggle(r.h.id)" [attr.aria-expanded]="open() === r.h.id">
+        <span class="name">
+          <span class="title">{{ r.h.name }}</span>
+          <span class="detail">{{ r.h.symbol || r.kind }} · {{ fmtQty(r.s.quantity) }} at {{ r.h.price | money: r.h.currency }}</span>
+        </span>
+        <span class="num value">
+          {{ r.value | money: r.h.currency }}
+          @if (r.valueInBase !== null) { <span class="conv">≈ {{ r.valueInBase | money: base() }}</span> }
+        </span>
+        <span class="num gain" [class.plus]="r.unrealized > 0" [class.loss]="r.unrealized < 0">
+          {{ r.unrealized | money: r.h.currency : true }}
+          @if (r.pct !== null) { <span class="conv">{{ r.pct * 100 | number: '1.1-1' }}%</span> }
+        </span>
+      </button>
+
+      @if (open() === r.h.id) {
+        <div class="detail-panel">
+          <div class="facts">
+            <span>Average cost <strong>{{ r.s.averageCost | money: r.h.currency }}</strong></span>
+            <span>Cost basis <strong>{{ r.s.costBasis | money: r.h.currency }}</strong></span>
+            <span>Taken (sold) <strong>{{ r.s.realized | money: r.h.currency : true }}</strong></span>
+            <span class="priced">
+              Price {{ r.priced ? 'updated ' + r.priced : 'typed in' }}
+              @if (r.live) {
+                <button class="link-btn" type="button" (click)="refresh(r.h.id)" [disabled]="prices.busy()">{{ prices.busy() ? 'Updating…' : 'Update now' }}</button>
+              }
+            </span>
+          </div>
+
+          <form class="form-row trade-form" (submit)="addTrade($event, r.h)">
+            <div class="side" role="radiogroup" aria-label="Buy or sell">
+              <button type="button" role="radio" [attr.aria-checked]="side() === 'buy'" (click)="side.set('buy')">Buy</button>
+              <button type="button" role="radio" [attr.aria-checked]="side() === 'sell'" (click)="side.set('sell')">Sell</button>
+            </div>
+            <label class="field"><span>Units</span>
+              <input class="input" inputmode="decimal" [value]="qty()" (input)="qty.set($any($event.target).value)" />
+            </label>
+            <label class="field"><span>Price per unit ({{ r.h.currency }})</span>
+              <input class="input" inputmode="decimal" [value]="tradePrice()" (input)="tradePrice.set($any($event.target).value)" />
+            </label>
+            <label class="field"><span>Date</span>
+              <input class="input" type="date" min="1900-01-01" max="2100-12-31" [value]="tradeDate()" (change)="tradeDate.set($any($event.target).value)" />
+            </label>
+            <div class="actions"><button class="btn small" type="submit">Record {{ side() }}</button></div>
+            @if (tradeError(); as e) { <p class="error-text" role="alert">{{ e }}</p> }
+          </form>
+
+          <table class="trades">
+            <caption class="sr-only">Trades for {{ r.h.name }}</caption>
+            <thead><tr><th class="colhead" scope="col">Date</th><th class="colhead" scope="col">Trade</th><th class="colhead num" scope="col">Units</th><th class="colhead num" scope="col">Price</th><th class="colhead num" scope="col">Taken</th><th><span class="sr-only">Actions</span></th></tr></thead>
+            <tbody>
+              @for (t of tradesOf(r.h); track t.id) {
+                <tr>
+                  <td>{{ t.date }}</td>
+                  <td>{{ t.side === 'buy' ? 'Bought' : 'Sold' }}</td>
+                  <td class="num">{{ fmtQty(t.quantity) }}</td>
+                  <td class="num">{{ t.price | money: r.h.currency }}</td>
+                  <td class="num">@if (t.side === 'sell') { {{ r.s.realizedByTrade[t.id] | money: r.h.currency : true }} }</td>
+                  <td class="num"><button class="icon-btn" type="button" (click)="removeTrade(r.h, t.id)" [attr.aria-label]="'Remove trade of ' + t.date"><app-icon name="close" /></button></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          @if (draft()?.id === r.h.id) {
+            @let d = draft()!;
+            <form class="form-row" (submit)="saveHolding($event)">
+              <label class="field wide"><span>Name</span><input class="input" maxlength="60" [value]="d.name" (input)="patch({ name: $any($event.target).value })" /></label>
+              <label class="field"><span>Symbol</span><input class="input" maxlength="20" [value]="d.symbol" (input)="patch({ symbol: $any($event.target).value })" /></label>
+              <label class="field"><span>Kind</span>
+                <select class="select" (change)="patch({ kind: $any($event.target).value })">
+                  @for (k of kinds; track k.value) { <option [value]="k.value" [selected]="k.value === d.kind">{{ k.label }}</option> }
+                </select>
+              </label>
+              <label class="field"><span>Priced in</span>
+                <select class="select" (change)="patch({ currency: $any($event.target).value })">
+                  @for (c of currencies; track c) { <option [value]="c" [selected]="c === d.currency">{{ c }}</option> }
+                </select>
+              </label>
+              <label class="field"><span>Current price</span><input class="input" inputmode="decimal" [value]="d.price" (input)="patch({ price: $any($event.target).value })" /></label>
+              <div class="actions">
+                <button class="btn small" type="submit">Save</button>
+                <button class="btn small ghost" type="button" (click)="draft.set(null)">Cancel</button>
+              </div>
+              @if (draftError(); as e) { <p class="error-text" role="alert">{{ e }}</p> }
+            </form>
+          } @else {
+            <div class="panel-actions">
+              <button class="link-btn" type="button" (click)="editHolding(r.h)">Edit name, symbol or price</button>
+              @if (confirmDelete() !== r.h.id) {
+                <button class="link-btn delete" type="button" (click)="confirmDelete.set(r.h.id)">Delete holding</button>
+              } @else {
+                <span>Delete {{ r.h.name }} and its trades?</span>
+                <button class="btn small danger" type="button" (click)="deleteHolding(r.h.id)">Delete</button>
+                <button class="btn small ghost" type="button" (click)="confirmDelete.set(null)">Keep</button>
+              }
+            </div>
+          }
+        </div>
+      }
+    </li>
+  } @empty {
+    <li class="empty">No holdings yet. Add one to follow its value, average cost and gains.</li>
+  }
+</ul>

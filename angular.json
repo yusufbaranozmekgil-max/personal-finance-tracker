@@ -30,7 +30,15 @@
               }
             ],
             "styles": [
+              "node_modules/@fontsource/barlow/400.css",
+              "node_modules/@fontsource/barlow/500.css",
+              "node_modules/@fontsource/barlow/600.css",
+              "node_modules/@fontsource/barlow-condensed/500.css",
+              "node_modules/@fontsource/barlow-condensed/600.css",
               "src/styles.scss"
+            ],
+            "allowedCommonJsDependencies": [
+              "crypto-js"
             ]
           },
           "configurations": {
@@ -38,16 +46,17 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "400kB",
+                  "maximumError": "700kB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "8kB",
+                  "maximumError": "16kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "serviceWorker": "ngsw-config.json"
             },
             "development": {
               "optimization": false,

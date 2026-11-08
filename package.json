@@ -1,12 +1,13 @@
 {
-  "name": "finans-takip",
-  "version": "0.0.0",
+  "name": "ring-binder-finance",
+  "version": "2.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test --watch=false",
+    "e2e": "playwright test"
   },
   "private": true,
   "packageManager": "npm@11.16.0",

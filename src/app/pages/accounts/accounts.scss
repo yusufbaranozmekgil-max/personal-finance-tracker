@@ -1,0 +1,64 @@
+:host { display: block; }
+
+.head-btn { border-color: currentColor; color: inherit; }
+
+.accounts { list-style: none; margin: 0; padding: 0; }
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  min-height: 3.6rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.name {
+  display: grid; justify-items: start; gap: 0.05rem;
+  padding: 0.5rem 0; border: 0; background: none; text-align: left; cursor: pointer; min-width: 0;
+  &:hover .title { text-decoration: underline; text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
+}
+.title { font-family: var(--font-cond); font-weight: 600; font-size: 1.3rem; }
+.detail { color: var(--ink-2); font-size: 0.9rem; }
+
+.balance {
+  display: grid; justify-items: end;
+  font-family: var(--font-cond); font-weight: 600; font-size: 1.4rem;
+  .conv { font-family: var(--font); font-weight: 400; font-size: 0.88rem; color: var(--ink-2); }
+}
+
+.editing { background: var(--paper-sunk); margin-inline: -0.75rem; padding-inline: 0.75rem; }
+
+.danger-zone {
+  flex-basis: 100%;
+  display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+  .delete { color: var(--alert); }
+}
+
+.rates { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: baseline; }
+
+.form-row .error-text { flex-basis: 100%; }
+
+.cash-chart {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.35rem;
+  height: 10rem;
+  padding-top: 0.75rem;
+  margin-bottom: 2.25rem;
+  background: repeating-linear-gradient(to top, var(--rule) 0 1px, transparent 1px 2rem);
+  border-bottom: 1.5px solid var(--ink);
+}
+.cash-col { position: relative; display: flex; align-items: flex-end; justify-content: center; }
+.cash-bar { width: min(1.6rem, 70%); min-height: 1px; background: var(--tab-accounts); border: 1px solid color-mix(in oklch, var(--tab-accounts) 60%, var(--ink)); border-bottom: 0; border-radius: 2px 2px 0 0; }
+.cash-label {
+  position: absolute; bottom: -1.7rem;
+  font-family: var(--font-cond); font-size: 0.82rem; color: var(--ink-2);
+}
+
+@media (max-width: 760px) {
+  .title { font-size: 1.15rem; }
+  .balance { font-size: 1.2rem; }
+  .cash-chart { gap: 0.15rem; }
+  .cash-label { font-size: 0.7rem; }
+}

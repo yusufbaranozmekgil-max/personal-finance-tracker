@@ -1,0 +1,212 @@
+<header class="page-head" data-tab="month">
+  <div>
+    <h1>{{ title() }}</h1>
+    <p class="sub">Balance carried {{ carried().value | money: base() }}@if (carried().missing.length) { · without {{ carried().missing.join(', ') }} (no rate yet)}</p>
+  </div>
+  <div class="month-nav no-print">
+    @if (!isThisMonth()) {
+      <button class="link-btn today" type="button" (click)="goToday()">This month</button>
+    }
+    <button class="icon-btn" type="button" (click)="shiftMonth(-1)" aria-label="Previous month"><app-icon name="left" /></button>
+    <button class="icon-btn" type="button" (click)="shiftMonth(1)" aria-label="Next month"><app-icon name="right" /></button>
+  </div>
+</header>
+
+<form class="entry-line no-print" (submit)="add($event)" aria-label="Write an entry">
+  <div class="kind" role="radiogroup" aria-label="Kind">
+    <button type="button" role="radio" [attr.aria-checked]="lineKind() === 'expense'" (click)="setKind('expense')">Out</button>
+    <button type="button" role="radio" [attr.aria-checked]="lineKind() === 'income'" (click)="setKind('income')">In</button>
+  </div>
+  <label class="sr-only" for="line">Amount and what it was for</label>
+  <input id="line" class="line-input" type="text" inputmode="text" autocomplete="off" enterkeyhint="done"
+         placeholder="12.50 lunch with Sam" [value]="line()" (input)="onLine($any($event.target).value)"
+         [attr.aria-invalid]="!!lineError()" aria-describedby="line-help" />
+  <div class="line-details">
+    <label class="field">
+      <span>Category</span>
+      <select class="select" [value]="lineCategory()" (change)="pickCategory($any($event.target).value)">
+        <option value="">None</option>
+        @for (c of lineCategories(); track c.id) {
+          <option [value]="c.id" [selected]="c.id === lineCategory()">{{ c.name }}</option>
+        }
+      </select>
+    </label>
+    @if (accounts().length > 1) {
+      <label class="field">
+        <span>Account</span>
+        <select class="select" (change)="lineAccount.set($any($event.target).value)">
+          @for (a of accounts(); track a.id) {
+            <option [value]="a.id" [selected]="a.id === defaultAccount()">{{ a.name }}</option>
+          }
+        </select>
+      </label>
+    }
+    <label class="field">
+      <span>Date</span>
+      <input class="input" type="date" min="1900-01-01" max="2100-12-31" [value]="lineDate()" (change)="lineDate.set($any($event.target).value)" />
+    </label>
+    <label class="check"><input type="checkbox" [checked]="lineRecurring()" (change)="lineRecurring.set($any($event.target).checked)" /> Every month</label>
+    <button class="btn" type="submit"><app-icon name="plus" /> Add</button>
+  </div>
+  <p id="line-help" class="line-help" [class.error-text]="!!lineError()" aria-live="polite">
+    {{ lineError() ?? 'Type the amount, then what it was. A + in front means money in.' }}
+  </p>
+</form>
+
+<div class="list-head">
+  <h2 class="sr-only">Entries</h2>
+  <label class="search no-print">
+    <app-icon name="search" />
+    <span class="sr-only">Search all entries</span>
+    <input type="search" placeholder="Search every month" [value]="query()" (input)="query.set($any($event.target).value)" />
+  </label>
+</div>
+
+<ul class="entries" [attr.aria-label]="query() ? 'Search results' : 'Entries in ' + title()">
+  @for (r of rows(); track r.entry.id) {
+    @if (draft()?.id === r.entry.id) {
+      <li class="editing">
+        @let d = draft()!;
+        @if (d.kind === 'transfer') {
+          <div class="edit-form">
+            <p class="transfer-note">A move of {{ r.entry.amount | money: r.currency }} · {{ r.detail }}. To change it, delete it and record it again under Accounts.</p>
+            <div class="edit-actions">
+              <button class="btn small ghost" type="button" (click)="draft.set(null)">Close</button>
+              <button class="link-btn delete" type="button" (click)="remove(r.entry)">Delete</button>
+            </div>
+          </div>
+        } @else {
+        <form class="edit-form" (submit)="save($event)">
+          <label class="field"><span>Amount</span>
+            <input class="input" inputmode="decimal" [value]="d.amount" (input)="patch({ amount: $any($event.target).value })" />
+          </label>
+          <label class="field wide"><span>Note</span>
+            <input class="input" maxlength="200" [value]="d.note" (input)="patch({ note: $any($event.target).value })" />
+          </label>
+          <label class="field"><span>Kind</span>
+            <select class="select" (change)="patch({ kind: $any($event.target).value, categoryId: '' })">
+              <option value="expense" [selected]="d.kind === 'expense'">Money out</option>
+              <option value="income" [selected]="d.kind === 'income'">Money in</option>
+            </select>
+          </label>
+          <label class="field"><span>Category</span>
+            <select class="select" (change)="patch({ categoryId: $any($event.target).value })">
+              <option value="">None</option>
+              @for (c of categoriesFor($any(d.kind)); track c.id) {
+                <option [value]="c.id" [selected]="c.id === d.categoryId">{{ c.name }}</option>
+              }
+            </select>
+          </label>
+          <label class="field"><span>Account</span>
+            <select class="select" (change)="patch({ accountId: $any($event.target).value })">
+              @for (a of accounts(); track a.id) {
+                <option [value]="a.id" [selected]="a.id === d.accountId">{{ a.name }} ({{ a.currency }})</option>
+              }
+            </select>
+          </label>
+          <label class="field"><span>Date</span>
+            <input class="input" type="date" min="1900-01-01" max="2100-12-31" [value]="d.date" (change)="patch({ date: $any($event.target).value })" />
+          </label>
+          @if (!r.entry.recurringOf) {
+            <label class="check"><input type="checkbox" [checked]="d.recurring" (change)="patch({ recurring: $any($event.target).checked })" /> Every month</label>
+          }
+          <div class="edit-actions">
+            <button class="btn small" type="submit">Save</button>
+            <button class="btn small ghost" type="button" (click)="draft.set(null)">Cancel</button>
+            <button class="link-btn delete" type="button" (click)="remove(r.entry)">Delete</button>
+          </div>
+          @if (draftError(); as err) { <p class="error-text" role="alert">{{ err }}</p> }
+        </form>
+        }
+      </li>
+    } @else {
+      <li class="row" [class.voided]="r.voided">
+        <span class="day">{{ r.day }}</span>
+        <button class="what" type="button" (click)="edit(r)" [disabled]="r.voided"
+                [attr.aria-label]="r.voided ? null : 'Edit ' + r.title">
+          <span class="title">{{ r.title }}</span>
+          @if (r.detail) { <span class="detail">{{ r.detail }}</span> }
+        </button>
+        <span class="flags">
+          @if (r.voided) { <span class="void-stamp">VOID</span> }
+          @else if (isRepeating(r.entry)) { <app-icon name="repeat" title="Repeats every month" /><span class="sr-only">Repeats every month</span> }
+          @else if (r.entry.kind === 'transfer') { <app-icon name="transfer" /><span class="sr-only">Transfer</span> }
+        </span>
+        <span class="amount num" [class.plus]="r.sign === 1">
+          @if (r.sign === 0) { {{ r.entry.amount | money: r.currency }} }
+          @else { {{ r.entry.amount * r.sign | money: r.currency : true }} }
+        </span>
+        @if (r.voided) {
+          <button class="link-btn restore" type="button" (click)="restore(r.entry)">Restore</button>
+        }
+      </li>
+    }
+  } @empty {
+    <li class="empty">
+      @if (query()) {
+        Nothing matches “{{ query() }}”.
+      } @else if (isThisMonth()) {
+        Nothing written this month yet. Try “4.20 coffee” in the line above.
+      } @else {
+        No entries in {{ title() }}.
+      }
+    </li>
+  }
+</ul>
+
+@if (!query()) {
+  <dl class="totals">
+    <div><dt>In</dt><dd class="num plus">{{ summary().income | money: base() }}</dd></div>
+    <div><dt>Out</dt><dd class="num">{{ summary().expense | money: base() }}</dd></div>
+    <div class="net"><dt>Left over</dt><dd class="num">{{ summary().net | money: base() : true }}</dd></div>
+  </dl>
+  @if (summary().missing.length) {
+    <p class="note-line small">Entries in {{ summary().missing.join(', ') }} are left out of these totals until exchange rates load.</p>
+  }
+
+  @if (budget(); as b) {
+    <section aria-labelledby="budget-h">
+      <div class="ruled-head"><h2 id="budget-h">Budget</h2>
+        @if (b.status === 'none') { <span class="aside">No monthly limit set · <a routerLink="/settings" class="no-print">set one</a></span> }
+      </div>
+      @if (b.status !== 'none') {
+        <div class="budget" [attr.data-status]="b.status">
+          <div class="meter" role="meter" aria-label="Spent of monthly limit" [attr.aria-valuenow]="b.spent" aria-valuemin="0" [attr.aria-valuemax]="b.limit">
+            <span class="fill" [style.width.%]="b.spent / b.limit * 100 > 100 ? 100 : b.spent / b.limit * 100"></span>
+            <span class="pace" [style.left.%]="b.projected / b.limit * 100 > 100 ? 100 : b.projected / b.limit * 100" title="Projected by month end"></span>
+          </div>
+          <p class="budget-text">
+            {{ b.spent | money: base() }} spent of {{ b.limit | money: base() }}.
+            @switch (b.status) {
+              @case ('over') { You are over the limit by {{ b.spent - b.limit | money: base() }}. }
+              @case ('over-pace') { At this pace the month ends near {{ b.projected | money: base() }}; keep to {{ b.perDayLeft | money: base() }} a day to stay under. }
+              @case ('close') { At this pace you finish close to the limit, around {{ b.projected | money: base() }}. }
+              @default { At this pace the month ends around {{ b.projected | money: base() }}. }
+            }
+          </p>
+        </div>
+      }
+    </section>
+  }
+
+  @if (breakdown().length) {
+    <section aria-labelledby="where-h">
+      <div class="ruled-head"><h2 id="where-h">Where it went</h2><span class="aside">{{ summary().expense | money: base() }}</span></div>
+      <ul class="shares">
+        @for (s of breakdown(); track s.name) {
+          <li>
+            <span class="share-name">{{ s.name }}</span>
+            <span class="share-bar" aria-hidden="true"><span [style.width]="barWidth(s.share)"></span></span>
+            <span class="num">{{ s.total | money: base() }}</span>
+            <span class="num pct muted">{{ s.share * 100 | number: '1.0-0' }}%</span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  <section aria-labelledby="six-h" class="six">
+    <div class="ruled-head"><h2 id="six-h">Six months</h2><span class="aside">in {{ base() }}</span></div>
+    <app-month-bars [months]="history()" [currency]="base()" [current]="month()" />
+  </section>
+}

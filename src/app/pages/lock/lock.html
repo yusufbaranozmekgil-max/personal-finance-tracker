@@ -1,0 +1,36 @@
+<main class="cover">
+  <div class="first-page">
+    <div class="title-block">
+      <h1>Locked</h1>
+      @if (legacy()) {
+        <p class="lede">Your book from the previous version of this app is protected with a password. Enter it once to move your data over; the same password will lock the new book.</p>
+      } @else {
+        <p class="lede">This book is encrypted on this device. Enter your password to open it.</p>
+      }
+    </div>
+    <form (submit)="unlock($event, pw.value)">
+    <ol class="steps">
+      <li>
+        <label class="field" for="pw"><span>Password</span></label>
+        <input #pw id="pw" class="input" type="password" autocomplete="current-password" autofocus
+               [attr.aria-invalid]="wrong()" aria-describedby="pw-error" />
+        <p id="pw-error" class="error-text" role="alert">@if (wrong()) {That password did not open the book.}</p>
+      </li>
+      <li class="actions">
+        <button class="btn" type="submit" [disabled]="busy()">{{ busy() ? 'Opening…' : 'Open the book' }}</button>
+      </li>
+      <li class="restore">
+        @if (!confirmErase()) {
+          <button class="link-btn" type="button" (click)="confirmErase.set(true)">Forgot the password?</button>
+        } @else {
+          <p>The data is encrypted with that password, so nobody can recover it. You can erase the locked book and start a new one; restore a backup file afterwards if you have one.</p>
+          <div class="actions">
+            <button class="btn danger" type="button" (click)="startOver()">Erase and start over</button>
+            <button class="btn ghost" type="button" (click)="confirmErase.set(false)">Keep it</button>
+          </div>
+        }
+      </li>
+    </ol>
+    </form>
+  </div>
+</main>

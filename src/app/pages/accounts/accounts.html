@@ -1,0 +1,134 @@
+<header class="page-head" data-tab="accounts">
+  <div>
+    <h1>Accounts</h1>
+    <p class="sub">Net worth {{ worth().value | money: base() }} · cash {{ cash().value | money: base() }} · investments {{ invested().value | money: base() }}</p>
+  </div>
+  <button class="btn small ghost head-btn no-print" type="button" (click)="newAccount()"><app-icon name="plus" /> New account</button>
+</header>
+
+@if (worth().missing.length) {
+  <p class="note-line small">{{ worth().missing.join(', ') }} {{ worth().missing.length === 1 ? 'is' : 'are' }} left out of the totals until exchange rates load.</p>
+}
+
+<div class="ruled-head"><h2>Balances</h2><span class="aside">today</span></div>
+<ul class="accounts">
+  @if (draft(); as d) {
+    @if (!d.id) {
+      <li class="editing"><ng-container *ngTemplateOutlet="editor" /></li>
+    }
+  }
+  @for (r of rows(); track r.account.id) {
+    @if (draft()?.id === r.account.id) {
+      <li class="editing"><ng-container *ngTemplateOutlet="editor" /></li>
+    } @else {
+      <li class="row">
+        <button class="name" type="button" (click)="editAccount(r.account)" [attr.aria-label]="'Edit ' + r.account.name">
+          <span class="title">{{ r.account.name }}</span>
+          <span class="detail">{{ r.kind }} · {{ r.account.currency }} · {{ r.entries }} {{ r.entries === 1 ? 'entry' : 'entries' }}</span>
+        </button>
+        <span class="num balance">
+          {{ r.balance | money: r.account.currency }}
+          @if (r.inBase !== null) { <span class="conv">≈ {{ r.inBase | money: base() }}</span> }
+          @else if (r.account.currency !== base()) { <span class="conv">no rate yet</span> }
+        </span>
+      </li>
+    }
+  }
+</ul>
+
+@if (multiCurrency()) {
+  <p class="note-line small rates">
+    @if (ratesAge(); as age) { Exchange rates: {{ age }}. } @else { No exchange rates yet. }
+    <button class="link-btn" type="button" (click)="refreshRates()" [disabled]="rates.busy()">{{ rates.busy() ? 'Loading…' : 'Refresh rates' }}</button>
+  </p>
+}
+
+@if (rows().length > 1) {
+  <section aria-labelledby="move-h">
+    <div class="ruled-head"><h2 id="move-h">Move money</h2><span class="aside">between your own accounts; not counted as spending</span></div>
+    <form class="form-row" (submit)="move($event)">
+      <label class="field"><span>From</span>
+        <select class="select" (change)="from.set($any($event.target).value)">
+          @for (r of rows(); track r.account.id) { <option [value]="r.account.id" [selected]="r.account.id === fromAccount()?.id">{{ r.account.name }}</option> }
+        </select>
+      </label>
+      <label class="field"><span>To</span>
+        <select class="select" (change)="to.set($any($event.target).value)">
+          @for (r of rows(); track r.account.id) { <option [value]="r.account.id" [selected]="r.account.id === toAccount()?.id">{{ r.account.name }}</option> }
+        </select>
+      </label>
+      <label class="field"><span>Amount{{ fromAccount() ? ' (' + fromAccount()!.currency + ')' : '' }}</span>
+        <input class="input" inputmode="decimal" [value]="amount()" (input)="amount.set($any($event.target).value)" />
+      </label>
+      @if (crossCurrency()) {
+        <label class="field"><span>Arrived ({{ toAccount()!.currency }})</span>
+          <input class="input" inputmode="decimal" [value]="received()" (input)="received.set($any($event.target).value)"
+                 [placeholder]="suggestedReceived() !== null ? '≈ ' + suggestedReceived() : ''" />
+        </label>
+      }
+      <label class="field"><span>Date</span>
+        <input class="input" type="date" min="1900-01-01" max="2100-12-31" [value]="when()" (change)="when.set($any($event.target).value)" />
+      </label>
+      <label class="field wide"><span>Note</span>
+        <input class="input" maxlength="200" placeholder="optional" [value]="note()" (input)="note.set($any($event.target).value)" />
+      </label>
+      <div class="actions"><button class="btn" type="submit"><app-icon name="transfer" /> Move</button></div>
+      @if (moveError(); as e) { <p class="error-text" role="alert">{{ e }}</p> }
+    </form>
+  </section>
+}
+
+<section aria-labelledby="cash-h">
+  <div class="ruled-head"><h2 id="cash-h">Cash over a year</h2><span class="aside">all accounts at each month's end, in {{ base() }}</span></div>
+  <div class="cash-chart" aria-hidden="true">
+    @for (p of series(); track p.month) {
+      <div class="cash-col" [title]="p.long + ': ' + (p.total | money: base())">
+        <span class="cash-bar" [style.height.%]="p.h"></span>
+        <span class="cash-label">{{ p.label }}</span>
+      </div>
+    }
+  </div>
+  <table class="sr-only">
+    <caption>Cash at the end of each month</caption>
+    @for (p of series(); track p.month) { <tr><th scope="row">{{ p.long }}</th><td>{{ p.total | money: base() }}</td></tr> }
+  </table>
+</section>
+
+<ng-template #editor>
+  @let d = draft()!;
+  <form class="form-row" (submit)="saveAccount($event)">
+    <label class="field wide"><span>Name</span>
+      <input class="input" maxlength="60" [value]="d.name" (input)="patch({ name: $any($event.target).value })" placeholder="e.g. Everyday bank account" />
+    </label>
+    <label class="field"><span>Kind</span>
+      <select class="select" (change)="patch({ kind: $any($event.target).value })">
+        @for (k of kinds; track k.value) { <option [value]="k.value" [selected]="k.value === d.kind">{{ k.label }}</option> }
+      </select>
+    </label>
+    <label class="field"><span>Currency</span>
+      <select class="select" (change)="patch({ currency: $any($event.target).value })" [disabled]="hasEntries(d.id)"
+              [title]="hasEntries(d.id) ? 'The currency is fixed once the account has entries' : ''">
+        @for (c of currencies; track c) { <option [value]="c" [selected]="c === d.currency">{{ c }}</option> }
+      </select>
+    </label>
+    <label class="field"><span>Starting balance</span>
+      <input class="input" inputmode="decimal" [value]="d.opening" (input)="patch({ opening: $any($event.target).value })" />
+    </label>
+    <div class="actions">
+      <button class="btn small" type="submit">{{ d.id ? 'Save' : 'Add account' }}</button>
+      <button class="btn small ghost" type="button" (click)="draft.set(null)">Cancel</button>
+    </div>
+    @if (d.id) {
+      <div class="danger-zone">
+        @if (confirmDelete() !== d.id) {
+          <button class="link-btn delete" type="button" (click)="confirmDelete.set(d.id)">Delete account</button>
+        } @else {
+          <span>Delete <strong>{{ d.name }}</strong>@if (hasEntries(d.id)) { and every entry in it}? This cannot be undone.</span>
+          <button class="btn small danger" type="button" (click)="deleteAccount(d.id)">Delete</button>
+          <button class="btn small ghost" type="button" (click)="confirmDelete.set(null)">Keep</button>
+        }
+      </div>
+    }
+    @if (draftError(); as e) { <p class="error-text" role="alert">{{ e }}</p> }
+  </form>
+</ng-template>

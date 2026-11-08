@@ -1,0 +1,162 @@
+:host { display: block; }
+
+.boot { min-height: 100dvh; }
+
+/* The open binder: punched page on the left, divider tabs standing out on the right. */
+.binder {
+  --page-max: 62rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--page-max)) 3.4rem minmax(0, 1fr);
+  min-height: 100dvh;
+  padding-block: 1.5rem 3rem;
+}
+
+.page {
+  grid-column: 2;
+  position: relative;
+  min-width: 0;
+  min-height: calc(100dvh - 4.5rem);
+  background-color: var(--paper);
+  /* Punched holes along the binding edge, every 7.5rem. */
+  background-image: radial-gradient(circle at 1.6rem 3.75rem, var(--hole) 0.62rem, var(--hole-edge) 0.66rem, var(--hole-edge) 0.72rem, transparent 0.76rem);
+  background-size: 3.2rem 7.5rem;
+  background-repeat: repeat-y;
+  border-radius: 2px 0 0 2px;
+  box-shadow: 0 1px 2px oklch(20% 0.02 165 / 0.12), 0 8px 28px -12px oklch(20% 0.02 165 / 0.25);
+  padding-left: 3.2rem;
+  view-transition-name: page;
+}
+
+/* Red margin line, the spine of every ruled insert. */
+.sheet {
+  display: flow-root;
+  min-height: 100%;
+  border-left: 1px solid var(--margin);
+  padding: 0 2.5rem 4rem 1.75rem;
+}
+
+.tabs {
+  grid-column: 3;
+  align-self: start;
+  position: sticky;
+  top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding-top: 2.5rem;
+}
+
+.tab {
+  display: grid;
+  place-items: center;
+  width: 2.7rem;
+  min-height: 7.25rem;
+  padding: 0.75rem 0;
+  writing-mode: vertical-rl;
+  border-radius: 0 6px 6px 0;
+  background: var(--tab-bg);
+  color: var(--tab-ink);
+  font-family: var(--font-cond);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: inset 4px 0 6px -4px oklch(20% 0.02 165 / 0.35);
+  transition: width 220ms var(--ease-out), box-shadow 220ms;
+  &:hover { width: 3rem; }
+  &.active {
+    width: 3.4rem;
+    box-shadow: none;
+    margin-left: -1px;
+  }
+  &:focus-visible { outline-offset: -4px; outline-color: var(--tab-ink); }
+}
+
+
+.lock-now {
+  display: grid; place-items: center;
+  width: 2.7rem; height: 2.7rem; margin-top: 0.75rem;
+  border: 1.5px solid var(--ink-3); border-radius: 50%;
+  background: var(--paper); color: var(--ink); cursor: pointer;
+  &:hover { border-color: var(--ink); }
+}
+
+/* Feedback pinned to the bottom of the view, like a slip tucked into the page. */
+.notices {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  z-index: 20;
+  display: grid;
+  gap: 0.5rem;
+  width: min(36rem, calc(100vw - 2rem));
+  transform: translateX(-50%);
+}
+.notice {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 0.4rem 0.4rem 0.4rem 1rem;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: 0 6px 20px -8px oklch(15% 0.02 165 / 0.45);
+  animation: slip-in 260ms var(--ease-out);
+  &.error { border-color: var(--alert); color: var(--alert); }
+  .icon-btn { width: 2rem; height: 2rem; }
+}
+
+.solo { grid-template-columns: minmax(0, 1fr) minmax(0, 40rem) minmax(0, 1fr); }
+.fail-title { font-size: 2.2rem; padding-top: 3rem; }
+.fail-text { max-width: 60ch; margin: 1rem 0 1.5rem; color: var(--ink-2); }
+
+@keyframes slip-in { from { transform: translateY(0.75rem); opacity: 0; } }
+
+@media (max-width: 760px) {
+  .notices { bottom: calc(4.4rem + env(safe-area-inset-bottom)); }
+  .binder {
+    display: block;
+    padding: 0 0 calc(4.25rem + env(safe-area-inset-bottom));
+  }
+  .page {
+    min-height: 100dvh;
+    padding-left: 0;
+    background-image: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .sheet {
+    border-left: 0;
+    padding: 0 1rem 3rem;
+  }
+  .tabs {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 10;
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 0.2rem;
+    padding: 0 0.3rem env(safe-area-inset-bottom);
+    background: var(--desk);
+    border-top: 1px solid var(--hole-edge);
+  }
+  .tab {
+    flex: 1 1 0;
+    width: auto;
+    min-height: 3.1rem;
+    padding: 0 0.2rem;
+    writing-mode: horizontal-tb;
+    border-radius: 6px 6px 0 0;
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    box-shadow: inset 0 4px 6px -4px oklch(20% 0.02 165 / 0.35);
+    &:hover { width: auto; }
+    &.active { width: auto; min-height: 3.6rem; margin-left: 0; }
+  }
+  .lock-now { position: fixed; top: 0.6rem; right: 0.6rem; margin: 0; width: 2.5rem; height: 2.5rem; z-index: 11; }
+}
+
+@media print {
+  .binder { display: block; padding: 0; }
+  .page { box-shadow: none; background-image: none; padding-left: 0; }
+  .sheet { border-left: 0; padding: 0; }
+}

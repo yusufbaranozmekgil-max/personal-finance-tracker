@@ -1,0 +1,37 @@
+<main class="cover">
+  <div class="first-page">
+    <div class="title-block">
+      <h1>Ring Binder</h1>
+      <p class="lede">A money book that lives in this browser. Write down what comes in and goes out, keep an eye on accounts, investments and goals. No sign-up, no server: your entries stay on this device.</p>
+    </div>
+
+    <ol class="steps">
+      <li>
+        <label class="field" for="cur">
+          <span>Which currency do you count in?</span>
+        </label>
+        <select id="cur" class="select" [value]="currency()" (change)="currency.set($any($event.target).value)">
+          @for (c of currencies; track c.code) {
+            <option [value]="c.code" [selected]="c.code === currency()">{{ c.code }} · {{ c.name }}</option>
+          }
+        </select>
+        <p class="hint">Accounts and investments can still use other currencies; totals are converted to this one.</p>
+      </li>
+      <li class="actions">
+        <button class="btn" type="button" (click)="startEmpty()">Start an empty book</button>
+        <button class="btn ghost" type="button" (click)="startDemo()">Look around with sample data</button>
+      </li>
+      <li class="restore">
+        <label class="link-btn" for="restore-file">Restore from a backup file</label>
+        <input id="restore-file" class="sr-only" type="file" accept=".json,application/json" (change)="restore($event)" />
+        @if (error(); as e) { <p class="error-text" role="alert">{{ e }}</p> }
+      </li>
+    </ol>
+
+    <dl class="facts">
+      <div><dt>Where your data lives</dt><dd>In this browser's storage on this device. Nobody else, including the site's owner, can see it.</dd></div>
+      <div><dt>How to keep it safe</dt><dd>Download a backup file from Settings now and then, or lock the book with a password.</dd></div>
+      <div><dt>What goes online</dt><dd>Only requests for exchange rates and market prices. They carry no amounts or names.</dd></div>
+    </dl>
+  </div>
+</main>

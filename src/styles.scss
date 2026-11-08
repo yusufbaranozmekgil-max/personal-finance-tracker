@@ -1,1 +1,315 @@
-/* You can add global styles to this file, and also import other style files */
+/* Ring-binder organizer: white ruled inserts on a binder cover, flat coloured dividers. */
+
+:root {
+  color-scheme: light;
+  --desk: oklch(93.5% 0.008 165);
+  --paper: oklch(99.2% 0.003 150);
+  --paper-sunk: oklch(96.6% 0.006 160);
+  --ink: oklch(24% 0.02 165);
+  --ink-2: oklch(42% 0.018 165);
+  --ink-3: oklch(55% 0.014 165);
+  --rule: oklch(87% 0.03 235);
+  --rule-strong: oklch(70% 0.05 235);
+  --margin: oklch(66% 0.15 25);
+  --hole: oklch(93.5% 0.008 165);
+  --hole-edge: oklch(80% 0.012 165);
+  --plus: oklch(47% 0.12 150);
+  --minus: oklch(24% 0.02 165);
+  --alert: oklch(52% 0.19 30);
+  --focus: oklch(55% 0.18 262);
+
+  /* Divider colours and the ink that reads on each. */
+  --tab-month: oklch(51% 0.16 262);
+  --tab-month-ink: oklch(99% 0.005 262);
+  --tab-accounts: oklch(74% 0.13 150);
+  --tab-accounts-ink: oklch(22% 0.03 150);
+  --tab-invest: oklch(82% 0.15 85);
+  --tab-invest-ink: oklch(24% 0.04 70);
+  --tab-goals: oklch(56% 0.19 33);
+  --tab-goals-ink: oklch(99% 0.005 35);
+  --tab-settings: oklch(83% 0.012 165);
+  --tab-settings-ink: oklch(24% 0.02 165);
+
+  --font: 'Barlow', 'Segoe UI', Roboto, sans-serif;
+  --font-cond: 'Barlow Condensed', 'Barlow', 'Arial Narrow', sans-serif;
+  --radius: 3px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@mixin dark {
+  color-scheme: dark;
+  --desk: oklch(19% 0.02 168);
+  --paper: oklch(24% 0.016 168);
+  --paper-sunk: oklch(21.5% 0.017 168);
+  --ink: oklch(94% 0.008 150);
+  --ink-2: oklch(79% 0.014 160);
+  --ink-3: oklch(66% 0.014 160);
+  --rule: oklch(34% 0.035 235);
+  --rule-strong: oklch(50% 0.05 235);
+  --margin: oklch(62% 0.14 25);
+  --hole: oklch(19% 0.02 168);
+  --hole-edge: oklch(30% 0.02 168);
+  --plus: oklch(78% 0.13 150);
+  --minus: oklch(94% 0.008 150);
+  --alert: oklch(72% 0.16 35);
+  --focus: oklch(72% 0.14 262);
+  --tab-month: oklch(62% 0.15 262);
+  --tab-month-ink: oklch(99% 0.005 262);
+  --tab-accounts: oklch(70% 0.12 150);
+  --tab-accounts-ink: oklch(18% 0.03 150);
+  --tab-invest: oklch(78% 0.14 85);
+  --tab-invest-ink: oklch(20% 0.04 70);
+  --tab-goals: oklch(66% 0.16 35);
+  --tab-goals-ink: oklch(16% 0.03 35);
+  --tab-settings: oklch(55% 0.012 165);
+  --tab-settings-ink: oklch(97% 0.005 165);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) { @include dark; }
+}
+:root[data-theme='dark'] { @include dark; }
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scrollbar-color: var(--rule-strong) transparent;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--desk);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 1rem;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: color-mix(in oklch, var(--tab-invest) 70%, transparent); color: var(--ink); }
+
+h1, h2, h3 {
+  font-family: var(--font-cond);
+  font-weight: 600;
+  line-height: 1.05;
+  margin: 0;
+  text-wrap: balance;
+}
+
+p { margin: 0; }
+
+a { color: inherit; text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* ---------- Controls, drawn in the insert's vocabulary ---------- */
+
+.field {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+  > span, > label {
+    font-family: var(--font-cond);
+    font-weight: 500;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+}
+
+.input, .select {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.1rem;
+  border: 0;
+  border-bottom: 1px solid var(--rule-strong);
+  border-radius: 0;
+  background: transparent;
+  caret-color: var(--tab-month);
+  &::placeholder { color: var(--ink-3); }
+  &:focus { outline: none; border-bottom: 2px solid var(--focus); padding-bottom: calc(0.35rem - 1px); }
+  &[aria-invalid='true'] { border-bottom-color: var(--alert); }
+}
+
+.select {
+  appearance: none;
+  padding-right: 1.4rem;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-2) 50%), linear-gradient(135deg, var(--ink-2) 50%, transparent 50%);
+  background-position: calc(100% - 0.65rem) 55%, calc(100% - 0.35rem) 55%;
+  background-size: 0.3rem 0.3rem;
+  background-repeat: no-repeat;
+  option { background: var(--paper); color: var(--ink); }
+}
+
+@mixin dark-picker { input[type='date']::-webkit-calendar-picker-indicator { filter: invert(1); } }
+input[type='date']::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) { @include dark-picker; } }
+:root[data-theme='dark'] { @include dark-picker; }
+
+.check {
+  display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; min-height: 2.5rem;
+  input { width: 1.1rem; height: 1.1rem; accent-color: var(--tab-month); margin: 0; }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.5rem;
+  padding: 0.4rem 1rem;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-cond);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 120ms var(--ease-out), background-color 160ms;
+  &:active:not(:disabled) { transform: translateY(1px); }
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+  &.ghost { background: transparent; color: var(--ink); }
+  &.ghost:hover:not(:disabled) { background: var(--paper-sunk); }
+  &.danger { background: var(--alert); border-color: var(--alert); color: oklch(99% 0 0); }
+  &.small { min-height: 2rem; padding: 0.2rem 0.65rem; font-size: 0.9rem; }
+  svg { width: 1.1em; height: 1.1em; flex: none; }
+}
+
+.link-btn {
+  border: 0; background: none; padding: 0.2rem 0; cursor: pointer; font-size: inherit;
+  color: var(--ink-2); text-decoration: underline; text-underline-offset: 0.2em; text-decoration-thickness: 1px;
+  &:hover { color: var(--ink); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.icon-btn {
+  display: inline-grid; place-items: center; flex: none;
+  width: 2.5rem; height: 2.5rem; border: 0; border-radius: 50%;
+  background: transparent; color: inherit; cursor: pointer;
+  &:hover:not(:disabled) { background: color-mix(in oklch, currentColor 12%, transparent); }
+  &:disabled { opacity: 0.35; cursor: not-allowed; }
+  svg { width: 1.25rem; height: 1.25rem; }
+}
+
+[data-tab='month'] { --tab-bg: var(--tab-month); --tab-ink: var(--tab-month-ink); }
+[data-tab='accounts'] { --tab-bg: var(--tab-accounts); --tab-ink: var(--tab-accounts-ink); }
+[data-tab='invest'] { --tab-bg: var(--tab-invest); --tab-ink: var(--tab-invest-ink); }
+[data-tab='goals'] { --tab-bg: var(--tab-goals); --tab-ink: var(--tab-goals-ink); }
+[data-tab='settings'] { --tab-bg: var(--tab-settings); --tab-ink: var(--tab-settings-ink); }
+
+/* The divider's colour carried onto the top of its insert. */
+.page-head {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  margin: 0 -2.5rem 0 calc(-1.75rem - 1px);
+  padding: 2.75rem 2.5rem 1.1rem 1.75rem;
+  background: var(--tab-bg);
+  color: var(--tab-ink);
+  h1 { font-size: clamp(2.3rem, 4.6vw, 3.6rem); letter-spacing: -0.01em; }
+  .sub { margin-top: 0.35rem; font-size: 1rem; opacity: 0.9; }
+  .icon-btn:focus-visible { outline-color: var(--tab-ink); }
+}
+@media (max-width: 760px) {
+  .page-head { margin: 0 -1rem; padding: 1.5rem 1rem 0.9rem; }
+}
+
+/* ---------- Ruled paper ---------- */
+
+.ruled-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem 1rem; flex-wrap: wrap;
+  padding-top: 2.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1.5px solid var(--ink);
+  h2 { font-size: 1.5rem; }
+  .aside { color: var(--ink-2); font-size: 0.95rem; }
+}
+
+.colhead {
+  font-family: var(--font-cond);
+  font-weight: 500;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.plus { color: var(--plus); }
+.muted { color: var(--ink-2); }
+.small { font-size: 0.9rem; }
+
+.note-line {
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink-2);
+}
+
+.error-text { color: var(--alert); font-size: 0.92rem; }
+
+.form-row {
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem 1.25rem;
+  padding: 0.9rem 0 1.1rem;
+  border-bottom: 1px solid var(--rule);
+  > .field { flex: 1 1 9rem; max-width: 22rem; }
+  > .field.wide { flex: 3 1 14rem; max-width: 40rem; }
+  > .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+}
+
+/* VOID stamp for struck entries */
+.void-stamp {
+  display: inline-block;
+  padding: 0 0.35rem;
+  border: 1.5px solid var(--alert);
+  border-radius: 2px;
+  color: var(--alert);
+  font-family: var(--font-cond);
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  transform: rotate(-4deg);
+}
+
+/* ---------- Page turn between dividers ---------- */
+
+::view-transition-old(page),
+::view-transition-new(page) {
+  animation-duration: 300ms;
+  animation-timing-function: var(--ease-out);
+}
+::view-transition-old(page) { animation-name: page-out; }
+::view-transition-new(page) { animation-name: page-in; }
+
+@keyframes page-out { to { opacity: 0; transform: translateX(-1.5%); filter: blur(1.5px); } }
+@keyframes page-in { from { opacity: 0; transform: translateX(3%); clip-path: inset(0 0 0 6%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(page), ::view-transition-new(page) { animation: none; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* ---------- Print: the current page as a clean sheet ---------- */
+
+@media print {
+  :root, :root[data-theme] {
+    color-scheme: light;
+    --desk: white; --paper: white; --paper-sunk: white; --ink: black; --ink-2: #333; --ink-3: #555;
+    --rule: #bbb; --rule-strong: #888; --plus: #0a5d2a; --minus: black;
+  }
+  body { background: white; }
+  .no-print { display: none !important; }
+}

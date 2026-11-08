@@ -1,0 +1,53 @@
+/* The binder's first page, opened flat on the desk. */
+.cover {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+}
+
+.first-page {
+  width: min(100%, 46rem);
+  background: var(--paper);
+  border-radius: 2px;
+  box-shadow: 0 1px 2px oklch(20% 0.02 165 / 0.12), 0 10px 30px -14px oklch(20% 0.02 165 / 0.3);
+  border-top: 0.75rem solid var(--tab-month);
+}
+
+.title-block {
+  padding: 2.5rem 2.5rem 1.75rem;
+  border-bottom: 1.5px solid var(--ink);
+  h1 { font-size: clamp(3rem, 9vw, 5rem); letter-spacing: -0.015em; }
+}
+
+.lede { margin-top: 0.9rem; max-width: 58ch; font-size: 1.1rem; color: var(--ink-2); }
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0 2.5rem;
+  li { padding: 1.25rem 0; border-bottom: 1px solid var(--rule); }
+  .select { max-width: 24rem; font-size: 1.1rem; }
+}
+
+.hint { margin-top: 0.4rem; color: var(--ink-2); font-size: 0.92rem; }
+.actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.restore { display: grid; gap: 0.4rem; justify-items: start; }
+
+.facts {
+  margin: 0;
+  padding: 1.5rem 2.5rem 2.25rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  dt { font-family: var(--font-cond); font-weight: 600; font-size: 1.05rem; }
+  dd { margin: 0.25rem 0 0; color: var(--ink-2); font-size: 0.93rem; }
+}
+
+@media (max-width: 640px) {
+  .cover { padding: 0; place-items: stretch; }
+  .first-page { box-shadow: none; }
+  .title-block, .steps, .facts { padding-inline: 1.1rem; }
+  .facts { grid-template-columns: 1fr; gap: 1rem; }
+  .actions .btn { flex: 1 1 100%; }
+}

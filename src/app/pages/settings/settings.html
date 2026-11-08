@@ -1,0 +1,232 @@
+<header class="page-head" data-tab="settings">
+  <div>
+    <h1>Settings</h1>
+    <p class="sub">Everything here stays in this browser.</p>
+  </div>
+</header>
+
+<nav class="toc no-print" aria-label="On this page">
+  <a routerLink="/settings" fragment="money">Money</a><a routerLink="/settings" fragment="categories">Categories</a><a routerLink="/settings" fragment="backup">Backup</a><a routerLink="/settings" fragment="import">Import</a><a routerLink="/settings" fragment="lock">Password</a><a routerLink="/settings" fragment="prices">Prices</a><a routerLink="/settings" fragment="display">Display</a><a routerLink="/settings" fragment="erase">Erase</a>
+</nav>
+
+<!-- Money -->
+<section id="money" aria-labelledby="money-h">
+  <div class="ruled-head"><h2 id="money-h">Currency and budget</h2></div>
+  <div class="form-row">
+    <label class="field"><span>Count totals in</span>
+      <select class="select" (change)="setBase($any($event.target).value)">
+        @for (c of currencies; track c.code) { <option [value]="c.code" [selected]="c.code === base()">{{ c.code }} · {{ c.name }}</option> }
+      </select>
+    </label>
+  </div>
+  <form class="form-row" (submit)="saveBudget($event)">
+    <label class="field"><span>Monthly spending limit ({{ base() }})</span>
+      <input class="input" inputmode="decimal" placeholder="no limit" [value]="budgetText()" (input)="budgetText.set($any($event.target).value)" />
+    </label>
+    <div class="actions"><button class="btn small" type="submit">Save limit</button></div>
+    @if (budgetError(); as e) { <p class="error-text" role="alert">{{ e }}</p> }
+  </form>
+</section>
+
+<!-- Categories -->
+<section id="categories" aria-labelledby="cat-h">
+  <div class="ruled-head"><h2 id="cat-h">Categories</h2><span class="aside">click a name to rename it</span></div>
+  <div class="cat-columns">
+    @for (group of [{ kind: 'expense', label: 'Money out', list: expense() }, { kind: 'income', label: 'Money in', list: income() }]; track group.kind) {
+      <div>
+        <h3 class="colhead group-title">{{ group.label }}</h3>
+        <ul class="cats">
+          @for (c of group.list; track c.id) {
+            <li>
+              @if (renaming() === c.id) {
+                <input class="input" [value]="c.name" maxlength="40" (keydown.enter)="rename(c, $any($event.target).value)" (blur)="rename(c, $any($event.target).value)" (keydown.escape)="renaming.set(null)" [attr.aria-label]="'Rename ' + c.name" autofocus />
+              } @else {
+                <button class="cat-name" type="button" (click)="renaming.set(c.id)">{{ c.name }}</button>
+              }
+              <span class="muted small">{{ usage().get(c.id) ?? 0 }}</span>
+              <button class="icon-btn" type="button" (click)="removeCategory(c)" [attr.aria-label]="'Remove ' + c.name"><app-icon name="close" /></button>
+            </li>
+          }
+        </ul>
+        <form class="add-cat" (submit)="addCategory($event, $any(group.kind), catInput)">
+          <input #catInput class="input" maxlength="40" [placeholder]="'New ' + group.label.toLowerCase() + ' category'" [attr.aria-label]="'New ' + group.label.toLowerCase() + ' category'" />
+          <button class="btn small ghost" type="submit">Add</button>
+        </form>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- Backup -->
+<section id="backup" aria-labelledby="backup-h">
+  <div class="ruled-head"><h2 id="backup-h">Backup</h2></div>
+  <p class="note-line">Clearing this browser's data deletes your book. A backup file is the only copy that does not depend on this browser. {{ lastBackupLabel() }}</p>
+  <div class="form-row">
+    <div class="actions">
+      <button class="btn" type="button" (click)="backupNow()"><app-icon name="download" /> Download backup</button>
+      <label class="btn ghost" for="restore-file"><app-icon name="upload" /> Restore from file</label>
+      <input id="restore-file" class="sr-only" type="file" accept=".json,application/json" (change)="pickBackup($event)" />
+    </div>
+  </div>
+  @if (pendingRestore(); as p) {
+    <div class="confirm" role="alertdialog" aria-labelledby="restore-q">
+      <p id="restore-q">Replace everything in this book with <strong>{{ p.from }}</strong>? It holds {{ p.book.entries.length }} entries, {{ p.book.accounts.length }} accounts, {{ p.book.holdings.length }} holdings and {{ p.book.goals.length }} goals. What is here now will be gone unless you download a backup first.</p>
+      <div class="actions">
+        <button class="btn danger small" type="button" (click)="confirmRestore()">Replace my book</button>
+        <button class="btn ghost small" type="button" (click)="backupNow()">Download current first</button>
+        <button class="btn ghost small" type="button" (click)="pendingRestore.set(null)">Cancel</button>
+      </div>
+    </div>
+  }
+
+  <h3 class="sub-h"><app-icon name="cloud" /> Google Drive</h3>
+  @if (drive.available) {
+    <p class="muted small measure">The backup is encrypted with the password below before it leaves this device; Google stores only the locked file, and this app can see only that one file in your Drive.{{ book().drive?.lastSync ? ' Last saved ' + book().drive!.lastSync!.slice(0, 10) + '.' : '' }}</p>
+    <div class="form-row">
+      <label class="field"><span>Backup password</span>
+        <input class="input" type="password" autocomplete="new-password" [value]="drivePw()" (input)="drivePw.set($any($event.target).value)" />
+      </label>
+      <div class="actions">
+        <button class="btn small" type="button" (click)="driveBackup()" [disabled]="drive.busy()">Save to Drive</button>
+        <button class="btn small ghost" type="button" (click)="driveRestore()" [disabled]="drive.busy()">Restore from Drive</button>
+      </div>
+      @if (driveError(); as e) { <p class="error-text" role="alert">{{ e }}</p> }
+    </div>
+  } @else {
+    <p class="note-line small">Google Drive backup is not switched on for this copy of the site. Use the backup file above; you can keep it in any cloud folder you like.</p>
+  }
+
+  <h3 class="sub-h"><app-icon name="download" /> Export</h3>
+  <div class="form-row">
+    <div class="actions">
+      <button class="btn small ghost" type="button" (click)="csv()">Entries as CSV</button>
+      <button class="btn small ghost" type="button" (click)="xlsx()">Everything as Excel</button>
+    </div>
+    <p class="muted small">To print or save a PDF of a month, open it and use your browser's print command; the page prints as a clean sheet.</p>
+  </div>
+</section>
+
+<!-- Import -->
+<section id="import" aria-labelledby="import-h">
+  <div class="ruled-head"><h2 id="import-h">Import a bank statement</h2><span class="aside">CSV or Excel</span></div>
+  <p class="note-line small">Columns are recognised by their names (date, description, amount, or debit and credit, in several languages). You see every row before anything is added; rows already in the account are skipped.</p>
+  <div class="form-row">
+    <label class="field"><span>Into account</span>
+      <select class="select" (change)="importAccount.set($any($event.target).value); reviewStatement()">
+        @for (a of book().accounts; track a.id) { <option [value]="a.id" [selected]="a.id === targetAccount()">{{ a.name }} ({{ a.currency }})</option> }
+      </select>
+    </label>
+    <label class="field"><span>Dates like 03/04/2026 mean</span>
+      <select class="select" (change)="dayFirst.set($any($event.target).value === 'dmy'); reviewStatement()">
+        <option value="dmy" [selected]="dayFirst()">3 April (day first)</option>
+        <option value="mdy" [selected]="!dayFirst()">March 4 (month first)</option>
+      </select>
+    </label>
+    <div class="actions">
+      <label class="btn small ghost" for="statement-file"><app-icon name="upload" /> {{ importing() ? 'Reading…' : 'Choose file' }}</label>
+      <input id="statement-file" class="sr-only" type="file" accept=".csv,.xlsx,.xls,text/csv" (change)="pickStatement($event)" />
+    </div>
+  </div>
+  @if (preview(); as p) {
+    <div class="preview">
+      <p><strong>{{ importName() }}</strong>: {{ p.ready }} new, {{ p.duplicates }} already there, {{ p.errors }} unreadable. Columns found: {{ columnsFound(p) }}.</p>
+      <div class="preview-scroll">
+        <table>
+          <thead><tr><th class="colhead" scope="col">Row</th><th class="colhead" scope="col">Date</th><th class="colhead" scope="col">Note</th><th class="colhead num" scope="col">Amount</th><th class="colhead" scope="col">Status</th></tr></thead>
+          <tbody>
+            @for (r of p.rows.slice(0, 50); track r.line) {
+              <tr [class.skip]="r.duplicate || r.error">
+                <td>{{ r.line }}</td>
+                <td>{{ r.entry?.date }}</td>
+                <td>{{ r.entry?.note }}</td>
+                <td class="num">@if (r.entry) { {{ (r.entry.kind === 'income' ? r.entry.amount : -r.entry.amount) | money: accountCurrency() : true }} }</td>
+                <td>{{ r.error ?? (r.duplicate ? 'already there' : 'new') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (p.rows.length > 50) { <p class="muted small">Showing the first 50 of {{ p.rows.length }} rows.</p> }
+      <div class="actions">
+        <button class="btn small" type="button" (click)="applyImport()" [disabled]="!p.ready">Add {{ p.ready }} entries to {{ accountName(targetAccount()) }}</button>
+        <button class="btn small ghost" type="button" (click)="cancelImport()">Cancel</button>
+      </div>
+    </div>
+  }
+</section>
+
+<!-- Password -->
+<section id="lock" aria-labelledby="lock-h">
+  <div class="ruled-head"><h2 id="lock-h">Password</h2><span class="aside">{{ store.hasPassword() ? 'on: the book is encrypted' : 'off' }}</span></div>
+  <p class="note-line small measure">With a password, the book is encrypted on this device and locks after 5 idle minutes. There is no way to recover a forgotten password, so keep a backup file.</p>
+  <form class="form-row" (submit)="setPassword($event)">
+    <input class="sr-only" type="text" autocomplete="username" value="ring-binder" tabindex="-1" aria-hidden="true" />
+    <label class="field"><span>{{ store.hasPassword() ? 'New password' : 'Password' }}</span>
+      <input class="input" type="password" autocomplete="new-password" [value]="pw1()" (input)="pw1.set($any($event.target).value)" />
+    </label>
+    <label class="field"><span>Same again</span>
+      <input class="input" type="password" autocomplete="new-password" [value]="pw2()" (input)="pw2.set($any($event.target).value)" />
+    </label>
+    <div class="actions">
+      <button class="btn small" type="submit" [disabled]="pwBusy()"><app-icon name="lock" /> {{ store.hasPassword() ? 'Change password' : 'Encrypt the book' }}</button>
+    </div>
+    @if (pwError(); as e) { <p class="error-text" role="alert">{{ e }}</p> }
+  </form>
+  @if (store.hasPassword()) {
+    <div class="form-row">
+      @if (!confirmRemovePw()) {
+        <button class="link-btn" type="button" (click)="confirmRemovePw.set(true)">Remove the password</button>
+      } @else {
+        <span>Store the book unencrypted again?</span>
+        <div class="actions">
+          <button class="btn small danger" type="button" (click)="removePassword()">Remove</button>
+          <button class="btn small ghost" type="button" (click)="confirmRemovePw.set(false)">Keep it</button>
+        </div>
+      }
+    </div>
+  }
+</section>
+
+<!-- Prices -->
+<section id="prices" aria-labelledby="prices-h">
+  <div class="ruled-head"><h2 id="prices-h">Stock and fund prices</h2><span class="aside">optional</span></div>
+  <p class="note-line small measure">Crypto and gold prices need nothing. For stocks and funds, get a free key from one of these providers; the key is sent only to that provider, with the symbol you ask about.</p>
+  <form class="form-row" (submit)="saveKey($event)">
+    <label class="field"><span>Provider</span>
+      <select class="select" (change)="provider.set($any($event.target).value)">
+        @for (p of providers; track p.value) { <option [value]="p.value" [selected]="p.value === provider()">{{ p.label }}</option> }
+      </select>
+    </label>
+    <label class="field wide"><span>API key</span>
+      <input class="input" type="password" autocomplete="off" spellcheck="false" [value]="apiKey()" (input)="apiKey.set($any($event.target).value)" />
+    </label>
+    <div class="actions"><button class="btn small" type="submit">Save key</button></div>
+  </form>
+</section>
+
+<!-- Display -->
+<section id="display" aria-labelledby="display-h">
+  <div class="ruled-head"><h2 id="display-h">Display</h2><span class="aside">this device</span></div>
+  <div class="form-row" role="radiogroup" aria-label="Colour scheme">
+    @for (t of [{ v: 'system', l: 'Follow the system' }, { v: 'light', l: 'Light paper' }, { v: 'dark', l: 'Dark cover' }]; track t.v) {
+      <label class="check"><input type="radio" name="theme" [value]="t.v" [checked]="theme.choice() === t.v" (change)="setTheme(t.v)" /> {{ t.l }}</label>
+    }
+  </div>
+</section>
+
+<!-- Erase -->
+<section id="erase" aria-labelledby="erase-h">
+  <div class="ruled-head"><h2 id="erase-h">Erase everything</h2></div>
+  <p class="note-line small measure">Deletes the whole book from this browser: entries, accounts, investments, goals and settings. Download a backup first if you may want it back.</p>
+  <div class="form-row">
+    <label class="field"><span>Type ERASE to confirm</span>
+      <input class="input" autocomplete="off" [value]="eraseText()" (input)="eraseText.set($any($event.target).value)" />
+    </label>
+    <div class="actions"><button class="btn small danger" type="button" (click)="erase()" [disabled]="eraseText().trim().toUpperCase() !== 'ERASE'">Erase this book</button></div>
+  </div>
+</section>
+
+<footer class="about">
+  <p>Ring Binder keeps your money book in this browser. No account, no tracking, no server copy. Exchange rates come from open.er-api.com or the European Central Bank feed; crypto and gold prices from Binance.</p>
+  <p><a href="https://github.com/yusufbaranozmekgil-max/personal-finance-tracker" target="_blank" rel="noopener">Source code</a></p>
+</footer>

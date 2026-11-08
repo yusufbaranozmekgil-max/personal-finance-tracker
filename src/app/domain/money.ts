@@ -1,5 +1,8 @@
 import { Currency, IsoDate, MonthKey, Rates } from './model';
 
+/** The interface is English; words in dates follow it, numbers follow the user's locale. */
+export const UI_LOCALE = 'en-GB';
+
 /** Largest amount accepted anywhere: keeps sums far from float trouble. */
 export const MAX_AMOUNT = 1e12;
 
@@ -96,9 +99,14 @@ export function daysInMonth(month: MonthKey): number {
   return new Date(y, m, 0).getDate();
 }
 
+export function formatDate(date: IsoDate, opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }): string {
+  const [y, m, d] = date.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(UI_LOCALE, opts);
+}
+
 export function monthLabel(month: MonthKey, style: 'long' | 'short' = 'long'): string {
   const [y, m] = month.split('-').map(Number);
-  return new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: style, year: 'numeric' });
+  return new Date(y, m - 1, 1).toLocaleDateString(UI_LOCALE, { month: style, year: 'numeric' });
 }
 
 /** True for a real calendar date between 1900 and 2100. */
@@ -139,7 +147,7 @@ export const COMMON_CURRENCIES: Currency[] = [
 
 export function currencyName(code: Currency): string {
   try {
-    return new Intl.DisplayNames(undefined, { type: 'currency' }).of(code) ?? code;
+    return new Intl.DisplayNames(UI_LOCALE, { type: 'currency' }).of(code) ?? code;
   } catch {
     return code;
   }

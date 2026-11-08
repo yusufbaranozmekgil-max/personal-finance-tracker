@@ -1,0 +1,76 @@
+:host { display: block; }
+
+section { scroll-margin-top: 1rem; }
+
+.toc {
+  display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem;
+  padding: 1rem 0 0;
+  a { color: var(--ink-2); font-family: var(--font-cond); font-weight: 500; font-size: 1.02rem; letter-spacing: 0.03em; }
+  a:hover { color: var(--ink); }
+}
+
+.measure { max-width: 75ch; }
+.form-row .error-text, .form-row > p { flex-basis: 100%; }
+
+.cat-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 2.5rem;
+}
+.group-title { padding: 1rem 0 0.35rem; border-bottom: 1px solid var(--rule-strong); margin: 0; }
+.cats {
+  list-style: none; margin: 0; padding: 0;
+  li {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 0.5rem;
+    min-height: 2.6rem; border-bottom: 1px solid var(--rule);
+  }
+  .icon-btn { width: 2rem; height: 2rem; color: var(--ink-3); }
+  .icon-btn:hover { color: var(--alert); }
+}
+.cat-name {
+  padding: 0.3rem 0; border: 0; background: none; text-align: left; cursor: text;
+  &:hover { text-decoration: underline dotted; text-underline-offset: 0.25em; }
+}
+.add-cat { display: flex; gap: 0.5rem; align-items: flex-end; padding: 0.6rem 0 1rem; }
+
+.sub-h {
+  display: flex; align-items: center; gap: 0.45rem;
+  margin-top: 1.75rem; font-size: 1.2rem;
+}
+
+.confirm {
+  margin: 0.75rem 0;
+  padding: 0.9rem 1rem;
+  border: 1.5px solid var(--alert);
+  border-radius: var(--radius);
+  p { max-width: 70ch; margin-bottom: 0.75rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+}
+
+.preview {
+  padding: 0.75rem 0 1rem;
+  > p { margin-bottom: 0.5rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+}
+.preview-scroll { max-height: 22rem; overflow: auto; border-bottom: 1.5px solid var(--ink); }
+.preview table {
+  width: 100%; border-collapse: collapse; font-size: 0.92rem;
+  th { position: sticky; top: 0; background: var(--paper); text-align: left; padding: 0.4rem 0.75rem 0.3rem 0; border-bottom: 1.5px solid var(--ink); }
+  th.num { text-align: right; }
+  td { padding: 0.35rem 0.75rem 0.35rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .skip td { color: var(--ink-3); }
+}
+
+.about {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 3px double var(--ink);
+  color: var(--ink-2);
+  font-size: 0.92rem;
+  display: grid; gap: 0.4rem;
+  p { max-width: 75ch; }
+}
+
+@media (max-width: 760px) {
+  .cat-columns { grid-template-columns: 1fr; }
+}

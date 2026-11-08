@@ -1,0 +1,85 @@
+<header class="page-head" data-tab="goals">
+  <div>
+    <h1>Goals</h1>
+    <p class="sub">
+      {{ totals().saved | money: base() }} put aside of {{ totals().target | money: base() }}
+      @if (pace() !== null) { · you saved {{ pace()! | money: base() }} a month lately }
+    </p>
+  </div>
+  <button class="btn small ghost head-btn no-print" type="button" (click)="newGoal()"><app-icon name="plus" /> New goal</button>
+</header>
+
+@if (draft(); as d) {
+  @if (!d.id) {
+    <div class="ruled-head"><h2>New goal</h2></div>
+    <ng-container [ngTemplateOutlet]="editor" />
+  }
+}
+
+<div class="ruled-head"><h2>Saving for</h2><span class="aside">amounts in {{ base() }}</span></div>
+<ul class="goals">
+  @for (r of rows(); track r.g.id) {
+    <li class="goal" [attr.data-status]="r.f.status">
+      @if (draft()?.id === r.g.id) {
+        <ng-container [ngTemplateOutlet]="editor" />
+      } @else {
+        <div class="goal-head">
+          <button class="name" type="button" (click)="editGoal(r.g)" [attr.aria-label]="'Edit ' + r.g.name">{{ r.g.name }}</button>
+          <span class="num figures"><strong>{{ r.g.saved | money: base() }}</strong> of {{ r.g.target | money: base() }}</span>
+        </div>
+        <div class="track" role="progressbar" [attr.aria-label]="r.g.name + ' progress'" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="Math.round(r.progress * 100)">
+          <span class="fill" [style.width.%]="r.progress * 100"></span>
+        </div>
+        <p class="forecast">{{ r.line }}</p>
+        @if (r.g.note) { <p class="goal-note">{{ r.g.note }}</p> }
+        <div class="goal-actions no-print">
+          <button class="link-btn" type="button" (click)="openDeposit(r.g.id)" [attr.aria-expanded]="depositFor() === r.g.id">Put money in or take some out</button>
+        </div>
+        @if (depositFor() === r.g.id) {
+          <form class="form-row deposit" (submit)="deposit($event, r.g)">
+            <label class="field"><span>Amount ({{ base() }})</span>
+              <input class="input" inputmode="decimal" placeholder="e.g. 50 or -20" [value]="depositAmount()" (input)="depositAmount.set($any($event.target).value)" />
+            </label>
+            <div class="actions"><button class="btn small" type="submit">Update saved</button></div>
+            @if (depositError(); as e) { <p class="error-text" role="alert">{{ e }}</p> }
+          </form>
+        }
+      }
+    </li>
+  } @empty {
+    <li class="empty">No goals yet. A goal with a deadline shows how much it needs each month, and whether your recent saving keeps up.</li>
+  }
+</ul>
+
+<ng-template #editor>
+  @let d = draft()!;
+  <form class="form-row" (submit)="save($event)">
+    <label class="field wide"><span>Goal</span>
+      <input class="input" maxlength="60" placeholder="e.g. Emergency fund" [value]="d.name" (input)="patch({ name: $any($event.target).value })" />
+    </label>
+    <label class="field"><span>Target</span>
+      <input class="input" inputmode="decimal" [value]="d.target" (input)="patch({ target: $any($event.target).value })" />
+    </label>
+    <label class="field"><span>Saved so far</span>
+      <input class="input" inputmode="decimal" [value]="d.saved" (input)="patch({ saved: $any($event.target).value })" />
+    </label>
+    <label class="field"><span>Deadline</span>
+      <input class="input" type="date" min="1900-01-01" max="2100-12-31" [value]="d.deadline" (change)="patch({ deadline: $any($event.target).value })" />
+    </label>
+    <label class="field wide"><span>Note</span>
+      <input class="input" maxlength="200" placeholder="optional" [value]="d.note" (input)="patch({ note: $any($event.target).value })" />
+    </label>
+    <div class="actions">
+      <button class="btn small" type="submit">{{ d.id ? 'Save' : 'Add goal' }}</button>
+      <button class="btn small ghost" type="button" (click)="draft.set(null)">Cancel</button>
+      @if (d.id) {
+        @if (confirmDelete() !== d.id) {
+          <button class="link-btn delete" type="button" (click)="confirmDelete.set(d.id)">Delete goal</button>
+        } @else {
+          <button class="btn small danger" type="button" (click)="remove(d.id)">Delete {{ d.name }}</button>
+        }
+      }
+    </div>
+    @if (draftError(); as e) { <p class="error-text" role="alert">{{ e }}</p> }
+  </form>
+</ng-template>
