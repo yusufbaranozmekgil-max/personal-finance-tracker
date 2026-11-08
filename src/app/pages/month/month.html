@@ -1,7 +1,7 @@
 <header class="page-head" data-tab="month">
   <div>
     <h1>{{ title() }}</h1>
-    <p class="sub">Balance carried {{ carried().value | money: base() }}@if (carried().missing.length) { · without {{ carried().missing.join(', ') }} (no rate yet)}</p>
+    <p class="sub">{{ entryCount() }} {{ entryCount() === 1 ? 'entry' : 'entries' }} written</p>
   </div>
   <div class="month-nav no-print">
     @if (!isThisMonth()) {
@@ -19,7 +19,7 @@
   </div>
   <label class="sr-only" for="line">Amount and what it was for</label>
   <input id="line" class="line-input" type="text" inputmode="text" autocomplete="off" enterkeyhint="done"
-         placeholder="12.50 lunch with Sam" [value]="line()" (input)="onLine($any($event.target).value)"
+         [placeholder]="example" [value]="line()" (input)="onLine($any($event.target).value)"
          [attr.aria-invalid]="!!lineError()" aria-describedby="line-help" />
   <div class="line-details">
     <label class="field">
@@ -52,6 +52,8 @@
     {{ lineError() ?? 'Type the amount, then what it was. A + in front means money in.' }}
   </p>
 </form>
+
+<app-keep-line />
 
 <div class="list-head">
   <h2 class="sr-only">Entries</h2>
@@ -155,11 +157,20 @@
 </ul>
 
 @if (!query()) {
-  <dl class="totals">
-    <div><dt>In</dt><dd class="num plus">{{ summary().income | money: base() }}</dd></div>
-    <div><dt>Out</dt><dd class="num">{{ summary().expense | money: base() }}</dd></div>
-    <div class="net"><dt>Left over</dt><dd class="num">{{ summary().net | money: base() : true }}</dd></div>
-  </dl>
+  <div class="foot">
+    <dl class="sums">
+      <div><dt>Money in</dt><dd class="num plus">{{ summary().income | money: base() }}</dd></div>
+      <div><dt>Money out</dt><dd class="num">{{ -summary().expense | money: base() }}</dd></div>
+      <div class="left"><dt>Left over this month</dt><dd class="num">{{ summary().net | money: base() : true }}</dd></div>
+    </dl>
+    <p class="carried">
+      <span>Balance carried</span>
+      <strong class="num">{{ carried().value | money: base() }}</strong>
+    </p>
+    @if (carried().missing.length) {
+      <p class="muted small">Balance leaves out {{ carried().missing.join(', ') }} until exchange rates load.</p>
+    }
+  </div>
   @if (summary().missing.length) {
     <p class="note-line small">Entries in {{ summary().missing.join(', ') }} are left out of these totals until exchange rates load.</p>
   }
@@ -198,7 +209,7 @@
             <span class="share-name">{{ s.name }}</span>
             <span class="share-bar" aria-hidden="true"><span [style.width]="barWidth(s.share)"></span></span>
             <span class="num">{{ s.total | money: base() }}</span>
-            <span class="num pct muted">{{ s.share * 100 | number: '1.0-0' }}%</span>
+            <span class="num pct muted">{{ pct(s.share) }}</span>
           </li>
         }
       </ul>

@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, effect, inject } from '@angular/core';
-import { NavigationStart, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
+import { NavigationEnd, NavigationStart, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { BookStore } from './data/book-store';
 import { RateService } from './data/rates';
 import { Notices } from './ui/notice';
 import { Theme } from './ui/theme';
 import { Icon } from './ui/icon';
+import { KeepLine } from './ui/keep-line';
 import { Welcome } from './pages/welcome/welcome';
 import { Lock } from './pages/lock/lock';
 
@@ -18,7 +19,7 @@ export const TABS = [
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon, Welcome, Lock],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon, Welcome, Lock, KeepLine],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,6 +32,8 @@ export class App {
   protected readonly store = inject(BookStore);
   protected readonly notices = inject(Notices);
   protected readonly tabs = TABS;
+  /** Month shows the line under its entry line; Settings has its own Backup section. */
+  protected readonly showKeepLine = signal(false);
 
   constructor() {
     inject(Theme);
@@ -46,6 +49,10 @@ export class App {
     // Struck-through deletions stay restorable only until the page is left.
     inject(Router).events.subscribe(e => {
       if (e instanceof NavigationStart) this.store.voided.set([]);
+      if (e instanceof NavigationEnd) {
+        const path = e.urlAfterRedirects.split(/[?#]/)[0];
+        this.showKeepLine.set(path !== '/' && path !== '/settings');
+      }
     });
   }
 

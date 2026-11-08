@@ -58,6 +58,7 @@ export function demoBook(base: Currency, today = todayIso()): Book {
 
   book.entries = entries;
   book.budget = nice(2000 * k);
+  book.sample = true;
   book.holdings = [
     {
       id: newId(), name: 'World index fund (sample)', symbol: 'WORLD', kind: 'fund', currency: base, price: nice(108 * k),

@@ -2,8 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 import { BookStore } from '../../data/book-store';
 import { DriveBackup } from '../../data/drive';
-import { download, exportCsv, exportXlsx, readSpreadsheet, stamp } from '../../data/files';
-import { readBackup, serializeBook } from '../../domain/book-io';
+import { exportCsv, exportXlsx, readSpreadsheet } from '../../data/files';
+import { BackupFile } from '../../data/backup-file';
+import { readBackup } from '../../domain/book-io';
 import { Book, Category, StockProvider, newId } from '../../domain/model';
 import { COMMON_CURRENCIES, currencyName, formatDate, parseAmount } from '../../domain/money';
 import { StatementPreview, applyStatement, previewStatement } from '../../domain/statement';
@@ -11,8 +12,6 @@ import { Theme, ThemeChoice } from '../../ui/theme';
 import { Notices } from '../../ui/notice';
 import { MoneyPipe } from '../../ui/money.pipe';
 import { Icon } from '../../ui/icon';
-
-const LAST_BACKUP = 'rbf-last-backup';
 
 @Component({
   selector: 'app-settings',
@@ -89,22 +88,15 @@ export class SettingsPage {
   }
 
   // ---------- backup file ----------
-  protected readonly lastBackup = signal(this.readLastBackup());
+  private backupFile = inject(BackupFile);
   protected readonly pendingRestore = signal<{ book: Book; note?: string; from: string } | null>(null);
 
-  private readLastBackup(): string | null {
-    try { return localStorage.getItem(LAST_BACKUP); } catch { return null; }
-  }
-
   protected backupNow(): void {
-    download(`ring-binder-backup-${stamp()}.json`, serializeBook(this.book()), 'application/json');
-    const now = new Date().toISOString().slice(0, 10);
-    try { localStorage.setItem(LAST_BACKUP, now); } catch { /* not critical */ }
-    this.lastBackup.set(now);
+    this.backupFile.download();
   }
 
   protected lastBackupLabel(): string {
-    const d = this.lastBackup();
+    const d = this.backupFile.last();
     return d ? `Last downloaded on this device: ${formatDate(d)}.` : 'No backup downloaded from this device yet.';
   }
 

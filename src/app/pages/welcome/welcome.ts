@@ -26,7 +26,6 @@ export class Welcome {
   protected startDemo(): void {
     this.store.start(this.currency(), demoBook(this.currency()));
     void this.router.navigateByUrl('/');
-    this.store.notice.set('This is sample data. Erase it in Settings when you are ready to start your own book.');
   }
 
   protected async restore(event: Event): Promise<void> {

@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { BookStore } from '../../data/book-store';
 import { Book, Entry, newId } from '../../domain/model';
-import { addMonths, daysInMonth, formatDate, isValidIsoDate, monthLabel, monthOf, parseAmount, todayIso } from '../../domain/money';
+import { DECIMAL_MARK, addMonths, daysInMonth, formatDate, formatPercent, isValidIsoDate, monthLabel, monthOf, parseAmount, todayIso } from '../../domain/money';
 import { cashTotal, categoryBreakdown, lastMonths, monthSummary } from '../../domain/ledger';
 import { forecastBudget } from '../../domain/forecast';
 import { parseQuickEntry } from '../../domain/quick-entry';
@@ -11,6 +10,7 @@ import { MoneyPipe } from '../../ui/money.pipe';
 import { Icon } from '../../ui/icon';
 import { Notices } from '../../ui/notice';
 import { MonthBars } from './month-bars';
+import { KeepLine } from '../../ui/keep-line';
 
 interface Row {
   entry: Entry;
@@ -35,7 +35,7 @@ interface Draft {
 
 @Component({
   selector: 'app-month',
-  imports: [MoneyPipe, Icon, MonthBars, DecimalPipe, RouterLink],
+  imports: [MoneyPipe, Icon, MonthBars, RouterLink, KeepLine],
   templateUrl: './month.html',
   styleUrl: './month.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,6 +50,9 @@ export class MonthPage {
   protected readonly isThisMonth = computed(() => this.month() === monthOf(this.today));
   protected readonly title = computed(() => monthLabel(this.month()));
   protected readonly query = signal('');
+  protected readonly example = `12${DECIMAL_MARK}50 lunch with Sam`;
+  protected readonly pct = (share: number) => formatPercent(share);
+  protected readonly entryCount = computed(() => this.book().entries.filter(e => monthOf(e.date) === this.month()).length);
 
   /** Quick entry line. */
   protected readonly line = signal('');

@@ -101,6 +101,8 @@ export interface Book {
   recurringThrough?: MonthKey;
   stockApi?: { provider: StockProvider; key: string };
   drive?: { fileId?: string; lastSync?: string };
+  /** Set on the demo book so the app can say it is sample data. */
+  sample?: boolean;
 }
 
 export const ACCOUNT_KINDS: { value: AccountKind; label: string }[] = [

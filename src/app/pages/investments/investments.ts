@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { BookStore } from '../../data/book-store';
 import { PriceService, priceSource } from '../../data/prices';
 import { HOLDING_KINDS, Holding, HoldingKind, Trade, newId } from '../../domain/model';
-import { COMMON_CURRENCIES, convert, formatDate, formatNumber, isValidIsoDate, parseAmount, todayIso } from '../../domain/money';
+import { COMMON_CURRENCIES, convert, formatDate, formatNumber, formatPercent, isValidIsoDate, parseAmount, todayIso } from '../../domain/money';
 import { canAddTrade, fifo, orderedTrades } from '../../domain/fifo';
 import { holdingsTotal, sumInBase } from '../../domain/ledger';
 import { MoneyPipe } from '../../ui/money.pipe';
@@ -32,7 +31,7 @@ export function parseUnitPrice(s: string): number | null {
 
 @Component({
   selector: 'app-investments',
-  imports: [MoneyPipe, Icon, DecimalPipe],
+  imports: [MoneyPipe, Icon],
   templateUrl: './investments.html',
   styleUrl: './investments.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -47,6 +46,7 @@ export class InvestmentsPage {
   protected readonly base = computed(() => this.book().baseCurrency);
   protected readonly today = todayIso();
   protected readonly fmtQty = (n: number) => formatNumber(n, 8);
+  protected readonly pct = (share: number) => formatPercent(share, 1);
 
   protected readonly rows = computed(() => {
     const book = this.book();

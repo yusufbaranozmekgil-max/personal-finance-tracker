@@ -71,7 +71,7 @@
         </span>
         <span class="num gain" [class.plus]="r.unrealized > 0" [class.loss]="r.unrealized < 0">
           {{ r.unrealized | money: r.h.currency : true }}
-          @if (r.pct !== null) { <span class="conv">{{ r.pct * 100 | number: '1.1-1' }}%</span> }
+          @if (r.pct !== null) { <span class="conv">{{ pct(r.pct) }}</span> }
         </span>
       </button>
 

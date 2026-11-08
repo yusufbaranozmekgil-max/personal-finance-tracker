@@ -27,6 +27,7 @@
       <main class="page" id="page">
         <div class="sheet">
           <router-outlet />
+          @if (showKeepLine()) { <app-keep-line /> }
         </div>
       </main>
       <div class="notices no-print" role="status" aria-live="polite">

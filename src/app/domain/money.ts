@@ -60,8 +60,17 @@ export function formatMoney(amount: number, currency: Currency, opts: { sign?: b
     }
     formatters.set(key, f);
   }
-  return f.format(amount);
+  // A true minus sign, not a hyphen, in front of negative figures.
+  return f.format(amount).replace('-', '\u2212');
 }
+
+export function formatPercent(share: number, digits = 0): string {
+  return new Intl.NumberFormat(undefined, { style: 'percent', minimumFractionDigits: digits, maximumFractionDigits: digits })
+    .format(share).replace('-', '\u2212');
+}
+
+/** The decimal mark of the user's locale, for examples and placeholders. */
+export const DECIMAL_MARK = (1.5).toLocaleString().charAt(1) === ',' ? ',' : '.';
 
 export function formatNumber(n: number, maxFraction = 2): string {
   return new Intl.NumberFormat(undefined, { maximumFractionDigits: maxFraction }).format(n);

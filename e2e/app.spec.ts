@@ -21,9 +21,9 @@ test('writes entries with the quick line and totals them', async ({ page }) => {
   const list = page.locator('ul.entries');
   await expect(list).toContainText('groceries at the market');
   await expect(list).toContainText('Groceries');
-  await expect(page.locator('.totals')).toContainText('€2,000.00');
-  await expect(page.locator('.totals')).toContainText('€12.50');
-  await expect(page.locator('.totals .net')).toContainText('+€1,987.50');
+  await expect(page.locator('.sums')).toContainText('€2,000.00');
+  await expect(page.locator('.sums')).toContainText('€12.50');
+  await expect(page.locator('.sums .left')).toContainText('+€1,987.50');
 
   await write(page, 'coffee');
   await expect(page.locator('#line-help')).toContainText('Start with an amount');
@@ -35,10 +35,10 @@ test('a deleted entry is voided and can be restored', async ({ page }) => {
   await page.getByRole('button', { name: 'Edit cinema' }).click();
   await page.getByRole('button', { name: 'Delete' }).click();
   await expect(page.locator('.void-stamp')).toBeVisible();
-  await expect(page.locator('.totals')).toContainText('€0.00');
+  await expect(page.locator('.sums')).toContainText('€0.00');
   await page.getByRole('button', { name: 'Restore' }).click();
   await expect(page.locator('.void-stamp')).toHaveCount(0);
-  await expect(page.locator('.totals')).toContainText('€9.00');
+  await expect(page.locator('.sums')).toContainText('€9.00');
 });
 
 test('data survives a reload, and a password locks it', async ({ page }) => {
@@ -80,7 +80,7 @@ test('backup file round trip', async ({ page }) => {
   await startEmpty(page, 'GBP');
   await write(page, '4.20 coffee');
   await page.getByRole('link', { name: 'Settings' }).click();
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Download backup' }).click()]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('section#backup').getByRole('button', { name: 'Download backup' }).click()]);
   const file = await download.path();
 
   await page.getByLabel('Type ERASE to confirm').fill('erase');

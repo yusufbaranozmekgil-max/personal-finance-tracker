@@ -33,6 +33,8 @@
   --font: 'Barlow', 'Segoe UI', Roboto, sans-serif;
   --font-cond: 'Barlow Condensed', 'Barlow', 'Arial Narrow', sans-serif;
   --radius: 3px;
+  /* One line pitch for every ruled insert. */
+  --pitch: 2.9rem;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -53,7 +55,7 @@
   --minus: oklch(94% 0.008 150);
   --alert: oklch(72% 0.16 35);
   --focus: oklch(72% 0.14 262);
-  --tab-month: oklch(62% 0.15 262);
+  --tab-month: oklch(50% 0.15 262);
   --tab-month-ink: oklch(99% 0.005 262);
   --tab-accounts: oklch(70% 0.12 150);
   --tab-accounts-ink: oklch(18% 0.03 150);
@@ -61,7 +63,7 @@
   --tab-invest-ink: oklch(20% 0.04 70);
   --tab-goals: oklch(66% 0.16 35);
   --tab-goals-ink: oklch(16% 0.03 35);
-  --tab-settings: oklch(55% 0.012 165);
+  --tab-settings: oklch(50% 0.012 165);
   --tab-settings-ink: oklch(97% 0.005 165);
 }
 
@@ -221,7 +223,7 @@ input[type='date']::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: po
   background: var(--tab-bg);
   color: var(--tab-ink);
   h1 { font-size: clamp(2.3rem, 4.6vw, 3.6rem); letter-spacing: -0.01em; }
-  .sub { margin-top: 0.35rem; font-size: 1rem; opacity: 0.9; }
+  .sub { margin-top: 0.35rem; font-size: 1rem; }
   .icon-btn:focus-visible { outline-color: var(--tab-ink); }
 }
 @media (max-width: 760px) {
@@ -294,8 +296,9 @@ input[type='date']::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: po
 ::view-transition-old(page) { animation-name: page-out; }
 ::view-transition-new(page) { animation-name: page-in; }
 
-@keyframes page-out { to { opacity: 0; transform: translateX(-1.5%); filter: blur(1.5px); } }
-@keyframes page-in { from { opacity: 0; transform: translateX(3%); clip-path: inset(0 0 0 6%); } }
+/* The new leaf is laid down from the binding edge outward over the old one. */
+@keyframes page-out { to { opacity: 0.6; } }
+@keyframes page-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(page), ::view-transition-new(page) { animation: none; }
