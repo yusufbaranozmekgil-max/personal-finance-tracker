@@ -9,7 +9,7 @@
   grid-template-columns: auto minmax(0, 1fr);
   align-items: end;
   gap: 0.5rem 1rem;
-  padding: 1.5rem 0 0.5rem;
+  padding: 1.5rem 0 0;
 }
 
 .kind {
@@ -58,7 +58,7 @@
 
 .list-head {
   display: flex; justify-content: flex-end;
-  padding-top: 1rem;
+  padding-top: 0.25rem;
   border-bottom: 1.5px solid var(--ink);
 }
 

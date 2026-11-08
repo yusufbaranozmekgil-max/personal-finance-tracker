@@ -10,7 +10,7 @@ import { formatDate } from '../domain/money';
   imports: [RouterLink],
   template: `
     @if (sample()) {
-      <span>This is sample data.</span>
+      <span>Kept in this browser. This is sample data.</span>
       <a routerLink="/settings" fragment="erase">Erase it to start your own book</a>
     } @else {
       <span>Kept in this browser{{ store.hasPassword() ? ', encrypted' : '' }}.</span>
