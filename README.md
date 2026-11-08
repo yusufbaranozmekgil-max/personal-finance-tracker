@@ -56,3 +56,7 @@ The app asks only for the `drive.file` scope, so it can see the one backup file 
 ## Privacy
 
 The only network requests are for exchange rates, for crypto and gold prices, for stock prices from the provider you chose (and only with your key), and for Google Drive if you use it. None of these requests contain amounts, names or notes. The response headers (`vercel.json`) set a strict Content Security Policy that lists exactly those hosts.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
