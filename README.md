@@ -2,7 +2,7 @@
 
 A personal finance tracker that lives entirely in your browser. Write down what comes in and goes out, follow your accounts, investments and savings goals. There is no sign-up and no server: the data stays on your device, encrypted with your password if you want.
 
-Live: [personal-finance-tracker-chi-plum.vercel.app](https://personal-finance-tracker-chi-plum.vercel.app/)
+Live: [yusufbaranozmekgil-max.github.io/personal-finance-tracker](https://yusufbaranozmekgil-max.github.io/personal-finance-tracker/) (also on [Vercel](https://personal-finance-tracker-chi-plum.vercel.app/), which some networks block)
 
 ## What it does
 
@@ -55,7 +55,7 @@ The app asks only for the `drive.file` scope, so it can see the one backup file 
 
 ## Privacy
 
-The only network requests are for exchange rates, for crypto and gold prices, for stock prices from the provider you chose (and only with your key), and for Google Drive if you use it. None of these requests contain amounts, names or notes. The response headers (`vercel.json`) set a strict Content Security Policy that lists exactly those hosts.
+The only network requests are for exchange rates, for crypto and gold prices, for stock prices from the provider you chose (and only with your key), and for Google Drive if you use it. None of these requests contain amounts, names or notes. A strict Content Security Policy lists exactly those hosts: sent as a header on Vercel (`vercel.json`) and copied into a meta tag for GitHub Pages (`scripts/pages.mjs`).
 
 ## License
 
