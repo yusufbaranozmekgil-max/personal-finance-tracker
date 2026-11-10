@@ -44,6 +44,14 @@ test('a deleted entry is voided and can be restored', async ({ page }) => {
 test('data survives a reload, and a password locks it', async ({ page }) => {
   await startEmpty(page);
   await write(page, '30 books');
+  // Wait until the save has reached IndexedDB before reloading.
+  await expect.poll(() => page.evaluate(() => new Promise<string>(resolve => {
+    const r = indexedDB.open('ring-binder-finance');
+    r.onsuccess = () => {
+      const tx = r.result.transaction('kv').objectStore('kv').getAll();
+      tx.onsuccess = () => { resolve(JSON.stringify(tx.result)); r.result.close(); };
+    };
+  }))).toContain('books');
   await page.reload();
   await expect(page.locator('ul.entries')).toContainText('books');
 
