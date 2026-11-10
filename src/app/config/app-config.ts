@@ -5,5 +5,5 @@
  * Left empty, the Google Drive backup is shown as not available on this site.
  */
 export const APP_CONFIG = {
-  googleClientId: '',
+  googleClientId: '29872063789-q3v6fjv9re657j2p69l27362r3fnengi.apps.googleusercontent.com',
 };
